@@ -1,4 +1,4 @@
--navigate to CabData-GoogleMaps-Example
+-navigate to the application folder
 
 -shift click window and select "Open command window here"
 
