@@ -1,0 +1,12 @@
+-navigate to CabData-GoogleMaps-Example
+
+-shift click window and select "Open command window here"
+
+-in the commandline run the following command: pip install -r requirements.txt
+(may need to do c:\python34\scripts\pip install -r requirements.txt if not set up properly)
+
+-in the commandline run the following command: runserver
+
+go to browser of your choice and navigate to http://localhost:5000
+
+to exit, press CTR-C in command window

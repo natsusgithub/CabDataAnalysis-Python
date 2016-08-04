@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Cab Data Project Sample</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+    <meta name="theme-color" content="#3b3b3b">
+    
+    <link rel="stylesheet" href="static/css/app.min.css">
+    <script src="static/js/vendor/modernizr.custom.js"></script>
+  </head>
+  <body id="top">
+    <div class="wrapper">
+      <!-- Header -->
+      <header id="header">
+        <a href="#nav">Options</a>
+        <h1><a href="#">Cab Data Project Sample</a></h1>
+      </header>
+      <!-- NAV -->
+      <nav id="nav">
+        <div class="form-control switch-container" style="display:{{is_fixed}}" >
+          <label for="next-location">
+            <h3>Sample Item</h3>
+          </label>
+          <input id="next-location" type="text" name="next-location" placeholder="Change this Item">
+        </div>
+		<hr width="100%">
+
+        <p>Select markers to be visible on map.</p>
+        <div class="form-control switch-container">
+          <h3>Show Pickup</h3>
+          <div class="onoffswitch">
+            <input id="pickup-switch" type="checkbox" name="pickup-switch" class="onoffswitch-checkbox" checked>
+            <label class="onoffswitch-label" for="pickup-switch">
+            <span class="switch-label" data-on="On" data-off="Off"></span>
+            <span class="switch-handle"></span>
+            </label>
+          </div>
+        </div>
+		 <div class="form-control switch-container">
+          <h3>Show Dropoff</h3>
+          <div class="onoffswitch">
+            <input id="dropoff-switch" type="checkbox" name="dropoff-switch" class="onoffswitch-checkbox" checked>
+            <label class="onoffswitch-label" for="dropoff-switch">
+            <span class="switch-label" data-on="On" data-off="Off"></span>
+            <span class="switch-handle"></span>
+            </label>
+          </div>
+        </div>
+      </nav>
+      <div id="map"></div>
+    </div>
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/6.9.1/polyfill.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/skel/3.0.1/skel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js"></script>
+    <script src="static/js/app.js"></script>
+    <script src="static/js/vendor/classie.js"></script>
+    <script>
+      var center_lat = {{lat}};
+      var center_lng = {{lng}};
+    </script>
+    <script src="static/js/map.js"></script>
+    <script defer src="https://maps.googleapis.com/maps/api/js?key={{gmaps_key}}&amp;callback=initMap&amp;libraries=places,geometry"></script>
+  </body>
+</html>
