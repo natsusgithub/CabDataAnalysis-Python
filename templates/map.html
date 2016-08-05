@@ -5,7 +5,7 @@
     <title>YellowCab</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
     <meta name="theme-color" content="#3b3b3b">
-    
+    <link rel='shortcut icon' href='static/images/favicon.ico' type='image/x-icon'/>
     <link rel="stylesheet" href="static/css/app.min.css">
     <script src="static/js/vendor/modernizr.custom.js"></script>
   </head>
@@ -63,6 +63,7 @@
       var center_lng = {{lng}};
     </script>
     <script src="static/js/map.js"></script>
+	<script src="static/js/markerclusterer.js"></script>
     <script defer src="https://maps.googleapis.com/maps/api/js?key={{gmaps_key}}&amp;callback=initMap&amp;libraries=places,geometry"></script>
   </body>
 </html>
