@@ -13,6 +13,7 @@
 	// Vars.
 	var	$body = document.querySelector('body');
 
+
 	// Breakpoints.
 	skel.breakpoints({
 		xlarge:	'(max-width: 1680px)',
@@ -33,8 +34,11 @@
 	var	$nav = document.querySelector('#nav'),
 		$navToggle = document.querySelector('a[href="#nav"]'),
 		$navClose;
+    
+    $nav.classList.toggle('visible');
 
-	// Event: Prevent clicks/taps inside the nav from bubbling.
+	/**
+    // Event: Prevent clicks/taps inside the nav from bubbling.
 	addEventsListener($nav, 'click touchend', function(event) {
 		event.stopPropagation();
 	});
@@ -78,5 +82,5 @@
 		event.stopPropagation();
 		$nav.classList.remove('visible');
 	});
-
+    **/
 })();
