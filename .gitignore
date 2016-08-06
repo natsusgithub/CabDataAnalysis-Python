@@ -1,0 +1,7 @@
+*.pyc
+*.db
+*.csv
+*.zip
+*.db-journal
+config/config.ini
+

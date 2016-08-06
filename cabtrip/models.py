@@ -1,12 +1,13 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from datetime import datetime
 import time
 import csv
 import sys
 
 from peewee import Model, SqliteDatabase, InsertQuery,\
-                   IntegerField, CharField, DoubleField
+                   IntegerField, CharField, DoubleField, DateTimeField
 
 from . import config
 
@@ -61,10 +62,24 @@ class CabTrip(BaseModel):
     # paymenttype
     # tipamount
     # fareamount
-    id = IntegerField(primary_key=True)
-    latitude = DoubleField()
-    longitude = DoubleField()
+    pickup_time = DateTimeField()
+    pickup_long = DoubleField()
+    pickup_lat = DoubleField()
+    pickup_neighborhood = CharField(null=True)
     
+    dropoff_time = DateTimeField()
+    dropoff_long = DoubleField()
+    dropoff_lat = DoubleField()
+    dropoff_neighborhood = CharField(null=True)
+    
+    ride_distance = DoubleField()
+    num_passenger = IntegerField()
+    payment_type = IntegerField()
+    tip_amount = DoubleField()
+    fare_amount = DoubleField()
+
+    congestion_index = IntegerField(null=True)
+	
     @classmethod
     def get_all(self):
         query = (CabTrip.select().dicts())
@@ -84,26 +99,67 @@ def __progressbar(i):
         sys.stdout.write(loadicon + " " + str(i) + " rows inserted...")
         sys.stdout.flush()
 
+#converts string formatted in 1/1/2001 0:00
+def convert_str_to_date(item):
+    #retdate = datetime.now()
+    try:
+        return datetime.strptime(item, "%m/%d/%Y %H:%M")
+       
+    except ValueError:
+        # try a different format 2001/1/1 00:00:00
+        return datetime.strptime(item, "%Y-%m-%d %H:%M:%S")
+    #return retdate
+
+
+
 # this will be configurable where we can pass arguments on whether to reload
 # the data or to use whatever is in Sqlite
-def load_data():
+def load_data(db):
     cabs = []
     index = 1
     starttime = time.time()
-    # we wouldn't do this in production.  This will reinsert the csv file
-    # use a smaller csv file (1000 count or less)
-    q = CabTrip.delete()
-    q.execute()
-    with open('cabdata.csv') as csvfile:
+    with open('cabdata_all.csv') as csvfile:
         datareader = csv.reader(csvfile)
 
         next(datareader)
-        for row in datareader:
-            CabTrip.create(id = index, latitude = row[6], longitude=row[5])
-            index += 1 # creates the primary key
-            if (((time.time() - starttime) % 60.0) > 1):
-                __progressbar(index)
-                starttime = time.time()
+        # speeds up the insert process significantly
+        cabtrips = []
+        with db.atomic():
+            for row in datareader:
+                '''
+                CabTrip.insert(pickup_time = convert_str_to_date(row[1]), \
+                               pickup_lat = row[6], \
+                               pickup_long = row[5], \
+                               dropoff_time = convert_str_to_date(row[2]), \
+                               dropoff_lat = row[10], \
+                               dropoff_long = row[9], \
+                               ride_distance = row[4], \
+                               num_passenger = row[3], \
+                               payment_type = row[11], \
+                               tip_amount = row[15], \
+                               fare_amount = row[12], 
+                               ).execute()
+                '''
+                cabtrips.append({"pickup_time": convert_str_to_date(row[1]), \
+                               "pickup_lat": row[6], \
+                               "pickup_long": row[5], \
+                               "dropoff_time": convert_str_to_date(row[2]), \
+                               "dropoff_lat": row[10], \
+                               "dropoff_long": row[9], \
+                               "ride_distance": row[4], \
+                               "num_passenger": row[3], \
+                               "payment_type": row[11], \
+                               "tip_amount": row[15], \
+                               "fare_amount": row[12]})
+                if (index % 90 == 0):
+                    CabTrip.insert_many(cabtrips).execute()
+                    cabtrips = []
+                    
+                index += 1
+                if (((time.time() - starttime) % 60.0) > 1):
+                    __progressbar(index)
+                    starttime = time.time()
+        
     __progressbar(index)
     print('completed!')
 

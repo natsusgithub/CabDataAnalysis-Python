@@ -18,7 +18,7 @@ if __name__ == '__main__':
 
     db = init_database()
     create_tables(db)
-    load_data()
+    load_data(db)
 
     # hardcoded central park location to default google maps initial view
     position = [40.783129, -73.965206]
