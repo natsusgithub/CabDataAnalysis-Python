@@ -9,7 +9,6 @@ peewee==2.8.1
 geopy==1.11.0
 protobuf==2.6.1
 requests==2.10.0
-
 gpsoauth==0.3.0
 protobuf-to-dict==0.1.0
 PyMySQL==0.7.5
