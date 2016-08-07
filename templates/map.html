@@ -7,6 +7,7 @@
     <meta name="theme-color" content="#3b3b3b">
     <link rel='shortcut icon' href='static/images/favicon.ico' type='image/x-icon'/>
     <link rel="stylesheet" href="static/css/app.min.css">
+    <link rel="stylesheet" href="static/css/plot.css">
     <script src="static/js/vendor/modernizr.custom.js"></script>
   </head>
   <body id="top">
@@ -59,46 +60,54 @@
             </label>
             </div>
         </div>
-          
-          <a href="#" data-toggle="modal" data-target="#congestion"><img src="static/images/congestion.png" /></a>
         
-          <!-- Button trigger modal -->
-<button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myModal">
-  Launch demo modal
-</button>
-
-<!-- Modal -->
-<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="myModalLabel">Modal title</h4>
-      </div>
-      <div class="modal-body">
-        ...
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary">Save changes</button>
-      </div>
-    </div>
-  </div>
-</div>
+        <!-- clear -->
+        <div style="clear: both;"></div>
           
-          <img src="static/images/tip-estimator.png" />
-          <img src="static/images/recommendation.png" />
+        <!-- widgets -->
+          
+        <div id="widget-congestion" class="widget" style="background-image:url(/static/images/congestion.png)">
+            <a href="#" class="more-info" data-widget="congestion">More info</a>
+        </div>
+        
+        <div id="widget-tip-estimator" class="widget" style="background-image:url(/static/images/tip-estimator.png)">
+            <a href="#" class="more-info" data-widget="tip-estimator">More info</a>
+        </div>
+         
+        <div id="widget-recommendation" class="widget" style="background-image:url(/static/images/recommendation.png)">
+            <a href="#" class="more-info" data-widget="recommendation">More info</a>
+        </div>
           
       </nav>
+        
       <div id="map"></div>
     
+      <!-- Overlays -->
+      <div id="congestion" class="overlay">
+           <h1>CONGESTION INDEX<span class="close">x</span></h1>
+           <hr>
+           <div class="plot"></div>
+      </div>
+      
+      <div id="tip-estimator" class="overlay">
+           <h1>TRIP ESTIMATOR<span class="close">x</span></h1>
+           <hr>
+      </div>
+    
+      <div id="recommendation" class="overlay">
+           <h1>RECOMMENDATION<span class="close">x</span></h1>
+           <hr>
+      </div>
+        
         
     <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/6.9.1/polyfill.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/skel/3.0.1/skel.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js"></script>
+    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
     <script src="static/js/app.js"></script>
+    <script src="static/js/plot.js"></script>
     <script src="static/js/vendor/classie.js"></script>
     <script>
       var center_lat = {{lat}};
@@ -107,6 +116,19 @@
     <script src="static/js/map.js"></script>
 	<script src="static/js/markerclusterer.js"></script>
     <script defer src="https://maps.googleapis.com/maps/api/js?key={{gmaps_key}}&amp;callback=initMap&amp;libraries=places,geometry"></script>
+    
+        
+    <script type="text/javascript">
+    $(document).ready(function() {
+        $(".more-info").click(function() {
+           widget = $(this).data("widget");
+           $("#"+widget).show();
+        });
+        $(".close").click(function(){
+          $(this).parent().parent().hide();  
+        })
+    })
+    </script>
       
     
   </body>

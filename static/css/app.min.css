@@ -2633,3 +2633,60 @@ html {
     background-color: #FFF;
     height:39px;
 }
+
+.widget {
+    width: 300px;
+    height: 125px;
+    margin-top: 10px;
+}
+
+.more-info {
+    position: relative !important;
+    float: right;
+    right: 10px;
+    top: 100px;
+    color: #FFF;
+}
+
+.overlay h1 {
+    margin: 0;
+    padding: 10px;
+    display: block;
+}
+
+.overlay .close {
+    float: right;
+}
+.overlay hr {
+    border-color: #FFF;
+    margin: 0;
+}
+
+.overlay {
+    width:800px; 
+    height: 600px; 
+    position: absolute; 
+    left: 30%; 
+    top: 100px; 
+    z-index: 1000; 
+    display: none;
+    background-color: #ecf0f1;
+}
+
+#congestion h1 {
+    background-color: #e67e22;
+}
+
+#congestion .plot {
+    color: #fff;
+}
+
+#tip-estimator h1 {
+    background-color: #3498db;
+}
+
+#recommendation h1 {
+    background-color: #1abc9c;
+}
+
+
