@@ -15,21 +15,22 @@
       <header id="header">
         <!--<a href="#nav">Options</a>-->
         <a href="#"> <span id="logo" style="background-image:url(static/images/logo.png);"></span></a>
-        <input id="location" type="text" name="next-location" placeholder="Type your location">
       </header>
+        
       <!-- NAV -->
       <nav id="nav">
         <div class="form-control switch-container" style="display:{{is_fixed}}" >
           <label for="next-location">
-            <h3>Sample Item</h3>
+          <strong>Neighbor</strong>
           </label>
-          <input id="next-location" type="text" name="next-location" placeholder="Change this Item">
+          <input id="next-location" type="text" name="next-location" placeholder="Type location">
+          <input type="checkbox" value="Pick-up">Pick-up
+          <input type="checkbox" value="Drop-off">Drop-off    
         </div>
-		<hr width="100%">
-
-        <p>Select markers to be visible on map.</p>
+		
+        <strong>Show/hide markers on map</strong>
         <div class="form-control switch-container">
-          <h3>Show Pickup</h3>
+          Pick-up
           <div class="onoffswitch">
             <input id="pickup-switch" type="checkbox" name="pickup-switch" class="onoffswitch-checkbox" checked>
             <label class="onoffswitch-label" for="pickup-switch">
@@ -38,8 +39,8 @@
             </label>
           </div>
         </div>
-		 <div class="form-control switch-container">
-          <h3>Show Dropoff</h3>
+        <div class="form-control switch-container">
+          Drop-off
           <div class="onoffswitch">
             <input id="dropoff-switch" type="checkbox" name="dropoff-switch" class="onoffswitch-checkbox" checked>
             <label class="onoffswitch-label" for="dropoff-switch">
@@ -48,9 +49,26 @@
             </label>
           </div>
         </div>
+        <div class="form-control switch-container">
+          Congestion
+          <div class="onoffswitch">
+            <input id="dropoff-switch" type="checkbox" name="dropoff-switch" class="onoffswitch-checkbox" checked>
+            <label class="onoffswitch-label" for="dropoff-switch">
+            <span class="switch-label" data-on="On" data-off="Off"></span>
+            <span class="switch-handle"></span>
+            </label>
+            </div>
+        </div>
+          
+          <a href="#" data-toggle="modal" data-target="#congestion"><img src="static/images/congestion.png" /></a>
+        
+          <img src="static/images/tip-estimator.png" />
+          <img src="static/images/recommendation.png" />
+          
       </nav>
       <div id="map"></div>
-    </div>
+    
+        
     <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/6.9.1/polyfill.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
@@ -65,5 +83,21 @@
     <script src="static/js/map.js"></script>
 	<script src="static/js/markerclusterer.js"></script>
     <script defer src="https://maps.googleapis.com/maps/api/js?key={{gmaps_key}}&amp;callback=initMap&amp;libraries=places,geometry"></script>
+    <script type="text/javascript">
+    $(document).ready(function() {
+  
+       $("#congestion").on('shown.bs.modal', function () {
+           
+       });
+       $("#trip-estimator").on('shown.bs.modal', function () {
+           
+       });
+       $("#recommendation").on('shown.bs.modal', function () {
+           
+       });
+    });
+    </script>
+      
+    
   </body>
 </html>
