@@ -22,7 +22,6 @@ class CabDataSample(Flask):
 
     # this will load googlemaps data from the API
     def fullmap(self):
-        
         return render_template('map.html',
                                lat=config['ORIGINAL_LATITUDE'],
                                lng=config['ORIGINAL_LONGITUDE'],
@@ -34,7 +33,9 @@ class CabDataSample(Flask):
     # that is passed through here.  Will probably change this to load in batches
     def raw_data(self):
         d = {}
-        d['cabs'] = CabTrip.get_all()
+        startrow = request.args.get('startrow')
+        fetch = request.args.get('numrecords')
+        d['cabs'] = CabTrip.get_range(startrow, fetch)
         return jsonify(d)
 
     def get_loc(self):

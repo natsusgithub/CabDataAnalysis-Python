@@ -11,12 +11,13 @@ from threading import Thread
 from cabtrip import config
 from cabtrip.app import CabDataSample
 #from cabtrip.search import create_search_threads, search_loop
-from cabtrip.models import init_database, create_tables, CabTrip, load_data
+from cabtrip.models import init_database, create_tables, drop_tables, CabTrip, load_data
 
 
 if __name__ == '__main__':
 
     db = init_database()
+    drop_tables(db)
     create_tables(db)
     load_data(db)
 
