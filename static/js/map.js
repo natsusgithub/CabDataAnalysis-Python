@@ -235,7 +235,7 @@ function loadRawData() {
     }
   })
 }
-
+/*
 function processClusterMarkers(item) {
 	  
 	  //map_data.cabs[item.id] = item
@@ -247,7 +247,7 @@ function processClusterMarkers(item) {
 	  map_data.pickup_markers.push(pickup_marker)
 	  return marker;
     }
-
+*/
 function processMarkers(item) {
 	  
 	if (Store.get('showPickups')){
@@ -295,6 +295,7 @@ function processMarkers(item) {
       }
 
 function updateMap() {
+	console.log('loading map')
   loadRawData().done(function(result) {
     
 	var options = {
@@ -302,7 +303,6 @@ function updateMap() {
 	}
 	var hasMarkers = false;
 	$.each(result.cabs, function(){
-		//processClusterMarkers($(this)[0])
 		processMarkers($(this)[0])
 		hasMarkers = true
 	});
