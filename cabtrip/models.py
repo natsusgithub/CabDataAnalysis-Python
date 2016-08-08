@@ -6,8 +6,8 @@ import time
 import csv
 import sys
 
-from peewee import Model, SqliteDatabase, InsertQuery,\
-                   IntegerField, CharField, DoubleField, DateTimeField
+from peewee import Model, SqliteDatabase, InsertQuery, DecimalField, \
+                   IntegerField, CharField, DoubleField, DateTimeField, fn
 
 from geopy.geocoders import Nominatim
 
@@ -53,11 +53,12 @@ class TypePayment(BaseModel):
 class Neighborhood(BaseModel):
     city = CharField()
     state = CharField()
-    lat = DoubleField()
-    long = DoubleField()
+    lat = DecimalField()
+    long = DecimalField()
     zipcode = CharField()
     
 class CabTrip(BaseModel):
+    cab_id = IntegerField(primary_key=True)
     pickup_time = DateTimeField()
     pickup_long = DoubleField()
     pickup_lat = DoubleField()
@@ -68,7 +69,7 @@ class CabTrip(BaseModel):
     dropoff_lat = DoubleField()
     dropoff_neighborhood = CharField(null=True)
     
-    ride_distance = DoubleField()
+    ride_distance = DecimalField()
     num_passenger = IntegerField()
     payment_type = IntegerField()
     tip_amount = DoubleField()
@@ -84,6 +85,17 @@ class CabTrip(BaseModel):
         for p in query:
             cabs.append(p)
 
+        return cabs
+
+    @classmethod
+    def get_range(self, startindex, fetch):
+        query = (CabTrip
+                 .select(CabTrip.pickup_lat, CabTrip.pickup_long, CabTrip.dropoff_lat, CabTrip.dropoff_long)
+                 .where((CabTrip.cab_id >= startindex) & (CabTrip.cab_id < (startindex + fetch))).dicts())
+        cabs = []
+        for p in query:
+            cabs.append(p)
+        print(len(cabs))
         return cabs
 
 # helper to display a progress bar
@@ -107,34 +119,72 @@ def convert_str_to_date(item):
     #return retdate
 
 def update_neighborhood():
+    
+    index = 0
     for n in Neighborhood.select():
+        __progressbar(index)
         (CabTrip
         .update(pickup_neighborhood = n.zipcode)
         .where(
-            n.lat == str(CabTrip.pickup_lat)[:5],
-            n.long == str(CabTrip.pickup_long)[:6]
+            CabTrip.pickup_neighborhood.is_null(True),
+            fn.Round(CabTrip.pickup_lat,2) == fn.Round(n.lat,2),
+            fn.Round(CabTrip.pickup_long,2) == fn.Round(n.long,2)
          )).execute()
-        (CabTrip
-        .update(dropoff_neighborhood = n.zipcode)
-        .where(
-            n.lat == str(CabTrip.dropoff_lat)[:5],
-            n.long == str(CabTrip.dropoff_long)[:6]
-         )).execute()
+        index += 1
 
-def get_neighborhood(lat, long):
-    try:
-        for n in Neighborhood.select().where((str(Neighborhood.lat) in lat), (str(Neighborhood.long) in long)):
-            return n.city
-    except ValueError:
-        return None        
-    return None
 
-# this will be configurable where we can pass arguments on whether to reload
-# the data or to use whatever is in Sqlite
-def load_data(db):
-    cabs = []
-    index = 1
+def get_neighborhood(db, lat, long):
+    #db.
+        
+    #neighborhood = Neighborhood.get((round(Neighborhood.lat, 2) == round(float(lat),2)), (round(
+     return "1"   
+
+def load_cabtrips(db):
     starttime = time.time()
+    index = 1
+    cabtrips = []
+    print("loading cab data...")
+    with open('cabdata.csv') as csvfile:
+        datareader = csv.reader(csvfile)
+        next(datareader) # skip header row
+        # speeds up the insert process significantly
+        cabtrips = []
+        with db.atomic():
+            for row in datareader:
+                # to speed up inserts, we create an array first and insert a giant list of it in bulk
+                cabtrips.append({
+                               "cab_id": index, \
+                               "pickup_time": convert_str_to_date(row[1]), \
+                               "pickup_lat": row[6], \
+                               "pickup_long": row[5], \
+                               "dropoff_time": convert_str_to_date(row[2]), \
+                               "dropoff_lat": row[10], \
+                               "dropoff_long": row[9], \
+                               "ride_distance": row[4], \
+                               "num_passenger": row[3], \
+                               "payment_type": row[11], \
+                               "tip_amount": row[15], \
+                               "fare_amount": row[12], \
+                               #"pickup_neighborhood": get_neighborhood(row[6],row[5])
+                                 })
+                               
+                if (index % 80 == 0):
+                    CabTrip.insert_many(cabtrips).execute()
+                    cabtrips = []
+                    
+                if (((time.time() - starttime) % 60.0) > 1):
+                    __progressbar(index)
+                    starttime = time.time()
+                index += 1
+        if (len(cabtrips) > 0):
+            CabTrip.insert_many(cabtrips).execute()
+    __progressbar(index)
+    print('completed!')
+    return index
+
+def load_neighborhoods(db):
+    starttime = time.time()
+    index = 1
     neighborhoods = []
     print("loading neighborhood data...")
     with open('zipcode.csv') as zipcodefile:
@@ -161,47 +211,26 @@ def load_data(db):
         if (len(neighborhoods) > 0):
             Neighborhood.insert_many(neighborhoods).execute()
     __progressbar(index)
-
-    index = 1
-    print("loading cab data...")
-    with open('cabdata.csv') as csvfile:
-        datareader = csv.reader(csvfile)
-        next(datareader) # skip header row
-        # speeds up the insert process significantly
-        cabtrips = []
-        with db.atomic():
-            for row in datareader:
-                # to speed up inserts, we create an array first and insert a giant list of it in bulk
-                cabtrips.append({"pickup_time": convert_str_to_date(row[1]), \
-                               "pickup_lat": row[6], \
-                               "pickup_long": row[5], \
-                               "dropoff_time": convert_str_to_date(row[2]), \
-                               "dropoff_lat": row[10], \
-                               "dropoff_long": row[9], \
-                               "ride_distance": row[4], \
-                               "num_passenger": row[3], \
-                               "payment_type": row[11], \
-                               "tip_amount": row[15], \
-                               "fare_amount": row[12], \
-                               #"pickup_neighborhood": get_neighborhood(row[6],row[5])
-                                 })
-                               
-                if (index % 80 == 0):
-                    CabTrip.insert_many(cabtrips).execute()
-                    cabtrips = []
-                    
-                if (((time.time() - starttime) % 60.0) > 1):
-                    __progressbar(index)
-                    starttime = time.time()
-                index += 1
-        if (len(cabtrips) > 0):
-            CabTrip.insert_many(cabtrips).execute()
-    __progressbar(index)
     print('completed!')
-    print('updating neighborhoods...')
-    #update_neighborhood()
+    return index
+
+# this will be configurable where we can pass arguments on whether to reload
+# the data or to use whatever is in Sqlite
+def load_data(db):
+    load_neighborhoods(db)
+
+    load_cabtrips(db)
+
+   # update_neighborhood()
     
-    
+
+
+   
+
+def drop_tables(db):
+    db.connect()
+    db.drop_tables([CabTrip, TypePayment, Neighborhood], safe=True)
+    db.close()
 
 def create_tables(db):
     db.connect()
