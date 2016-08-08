@@ -7,11 +7,13 @@ var map;
 var rawDataIsLoading = false;
 var locationMarker;
 var marker;
-
+var startrow = 1;
+var numrecords = 1000;
 var selectedStyle = 'light';
 
 var map_data = {
-	cabs: {}
+	pickup_markers: [],
+	dropoff_markers: []
 };
 
 
@@ -66,6 +68,19 @@ var StoreOptions = {
     default: 'roadmap',
     type: StoreTypes.String
   },
+  showDropoffs: {
+	  default: true,
+	  type: StoreTypes.Boolean
+  },
+  showPickups: {
+	  default: true,
+	  type: StoreTypes.Boolean
+  },
+  showCongestion: {
+	  default: false,
+	  type: StoreTypes.Boolean
+  }
+  
 };
 
 var Store = {
@@ -203,10 +218,12 @@ function loadRawData() {
     url: "raw_data",
     type: 'GET',
     data: {
-      
+      'startrow': startrow,
+	  'numrecords': numrecords
     },
     dataType: "json",
     beforeSend: function() {
+	  console.log("getting records: " + startrow.toString() + " to " + (startrow + numrecords).toString())
       if (rawDataIsLoading) {
         return false;
       } else {
@@ -221,42 +238,82 @@ function loadRawData() {
 
 function processClusterMarkers(item) {
 	  
-	  map_data.cabs[item.id] = item
-	  var latLng = new google.maps.LatLng(item.latitude, item.longitude);
-	  var marker = new google.maps.Marker({
-	position: latLng,
+	  //map_data.cabs[item.id] = item
+	  var latLng = new google.maps.LatLng(item.pickup_lat, item.pickup_long);
+	  var pickup_marker = new google.maps.Marker({
+		position: latLng,
     //icon: 'static/images/pickup.png'
 		});
-	  
+	  map_data.pickup_markers.push(pickup_marker)
 	  return marker;
     }
 
 function processMarkers(item) {
 	  
-	  map_data.cabs[item.id] = item
-	  var latLng = new google.maps.LatLng(item.latitude, item.longitude);
-	  var marker = new google.maps.Marker({
-	position: latLng,
+	if (Store.get('showPickups')){
+	  var pickup_latLng = new google.maps.LatLng(item.pickup_lat, item.pickup_long);
+	  var pickup_marker = new google.maps.Marker({
+	position: pickup_latLng,
     icon: 'static/images/pickup.png',
 	map: map
 		});
-	  
-	  return marker;
-    }
-	
+		map_data.pickup_markers.push(pickup_marker);
+	}
+	if (Store.get('showDropoffs')){
+	  var dropoff_latLng = new google.maps.LatLng(item.dropoff_lat, item.dropoff_long);
+	  var dropoff_marker = new google.maps.Marker({
+	position: dropoff_latLng,
+    icon: 'static/images/dropoff.png',
+	map: map
+		});
+		map_data.dropoff_markers.push(dropoff_marker);
+	}
+}
+
+ // Removes the markers from the map, but keeps them in the array.
+      function clearMarkers() {
+        setMapOnAll(null);
+      }
+
+      // Shows any markers currently in the array.
+      function showMarkers() {
+        setMapOnAll(map);
+      }
+
+      // Deletes all markers in the array by removing references to them.
+      function deleteMarkers() {
+		  console.log('deleting...')
+        clearMarkers();
+        markers = [];
+      }
+// Sets the map on all markers in the array.
+      function setMapOnAll(map) {
+        for (var i = 0; i < dropoff_markers.length; i++) {
+			map_data["dropoff_markers"][i].setMap(map);
+			map_data["pickup_markers"][i].setMap(map);
+        }
+      }
+
 function updateMap() {
   loadRawData().done(function(result) {
     
 	var options = {
 		imagePath:'static/images/m'
 	}
-	
-	var markers = [];
+	var hasMarkers = false;
 	$.each(result.cabs, function(){
-		markers.push(processMarkers($(this)[0]))
+		//processClusterMarkers($(this)[0])
+		processMarkers($(this)[0])
+		hasMarkers = true
 	});
 	
-	//var markerCluster = new MarkerClusterer(map, markers, options)
+	if (hasMarkers){
+		startrow += numrecords;
+	}
+		
+	
+	var markerCluster1 = new MarkerClusterer(map, map_data.dropoff_markers, options)
+	var markerCluster2 = new MarkerClusterer(map, map_data.pickup_markers, options)
   });
 }
 
@@ -271,32 +328,27 @@ function centerMap(lat, lng, zoom) {
   }
 }
 
+
 $(function() {
   // run interval timers to regularly update map
-  //window.setInterval(updateMap, 5000);
-  updateMap // TODO: only call it once for demo purposes
+  window.setInterval(updateMap, 5000);
+  //updateMap // TODO: only call it once for demo purposes
   
   
   
   //Wipe off/restore map icons when switches are toggled
-  function buildSwitchChangeListener(data, data_type, storageKey) {
+  function buildSwitchChangeListener(type, storageKey) {
     return function () {
       Store.set(storageKey, this.checked);
-      if (this.checked) {
-        updateMap();
-      } else {
-        $.each(data_type, function(d, d_type) {
-          $.each(data[d_type], function (key, value) {
-            data[d_type][key].marker.setMap(null);
-          });
-          data[d_type] = {}
-        });
-      }
-    };
+		  for (var i = 0; i < map_data[type].length; i++ ){
+			  map_data[type][i].setMap(this.checked ? map : null);
+		  }
+	  }
   }
 
   // Setup UI element interactions
-  $('#dropoff-switch').change(buildSwitchChangeListener(map_data, ["dropoff"], "showDropoffs"));
-  $('#pickup-switch').change(buildSwitchChangeListener(map_data, ["pickup"], "showPickups"));
+  $('#dropoff-switch').change(buildSwitchChangeListener(["dropoff_markers"], "showDropoffs"));
+  $('#pickup-switch').change(buildSwitchChangeListener(["pickup_markers"], "showPickups"));
+  $('#congestion-switch').change(buildSwitchChangeListener(["congestion"], "showCongestion"));
   
 });
