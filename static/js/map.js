@@ -312,8 +312,8 @@ function updateMap() {
 	}
 		
 	
-	var markerCluster1 = new MarkerClusterer(map, map_data.dropoff_markers, options)
-	var markerCluster2 = new MarkerClusterer(map, map_data.pickup_markers, options)
+	//var markerCluster1 = new MarkerClusterer(map, map_data.dropoff_markers, options)
+	//var markerCluster2 = new MarkerClusterer(map, map_data.pickup_markers, options)
   });
 }
 
