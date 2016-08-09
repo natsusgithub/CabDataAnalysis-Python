@@ -2689,4 +2689,13 @@ html {
     background-color: #1abc9c;
 }
 
+input#datepicker.hasDatepicker {
+    width: 90%;
+    float: left;
+}
+
+img.ui-datepicker-trigger {
+    float: left;
+}
+
 

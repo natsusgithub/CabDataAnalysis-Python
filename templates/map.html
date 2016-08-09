@@ -8,6 +8,7 @@
     <link rel='shortcut icon' href='static/images/favicon.ico' type='image/x-icon'/>
     <link rel="stylesheet" href="static/css/app.min.css">
     <link rel="stylesheet" href="static/css/plot.css">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.0/themes/base/jquery-ui.css">
     <script src="static/js/vendor/modernizr.custom.js"></script>
   </head>
   <body id="top">
@@ -29,26 +30,25 @@
           <input type="radio" name="neighborhood-type" value="Drop-off">Drop-off    
         </div>
 		
+        <strong>Date</strong>
+        <input type="text" id="datepicker">
+        
+        <strong>Time</strong>
+        <input type="text" id="time" readonly style="border:0; color:#f6931f; font-weight:bold;">
+        <div id="slider-time-range"></div>
+          
         <strong>Show/hide markers on map</strong>
         <div class="form-control switch-container">
-          Pick-up
-          <div class="onoffswitch">
+          <span style="float: left;">Pick-up</span>
+          <span style="float: right;">Drop-off</span>
+          <div class="onoffswitch" style="float: left; left: 70px;">
             <input id="pickup-switch" type="checkbox" name="pickup-switch" class="onoffswitch-checkbox" checked>
             <label class="onoffswitch-label" for="pickup-switch">
             <span class="switch-label" data-on="On" data-off="Off"></span>
             <span class="switch-handle"></span>
             </label>
           </div>
-        </div>
-        <div class="form-control switch-container">
-          Drop-off
-          <div class="onoffswitch">
-            <input id="dropoff-switch" type="checkbox" name="dropoff-switch" class="onoffswitch-checkbox" checked>
-            <label class="onoffswitch-label" for="dropoff-switch">
-            <span class="switch-label" data-on="On" data-off="Off"></span>
-            <span class="switch-handle"></span>
-            </label>
-          </div>
+          
         </div>
         <div class="form-control switch-container">
           Congestion
@@ -58,7 +58,11 @@
             <span class="switch-label" data-on="On" data-off="Off"></span>
             <span class="switch-handle"></span>
             </label>
-            </div>
+           </div>
+         <br />
+           <small style="float: left;">Low</small>
+           <small style="float: right;">High</small>
+           <img src="/static/images/congestion_spectrum.png" width="100%"/>
         </div>
         
         <!-- clear -->
@@ -101,8 +105,9 @@
         
         
     <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/6.9.1/polyfill.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/6.9.1/polyfill.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/skel/3.0.1/skel.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js"></script>
     <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
@@ -116,6 +121,9 @@
     <script src="static/js/map.js"></script>
 	<script src="static/js/markerclusterer.js"></script>
     <script defer src="https://maps.googleapis.com/maps/api/js?key={{gmaps_key}}&amp;callback=initMap&amp;libraries=places,geometry"></script>
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.0/jquery-ui.js"></script>
+  
     
         
     <script type="text/javascript">
@@ -127,7 +135,45 @@
         $(".close").click(function(){
           $(this).parent().parent().hide();  
         })
-    })
+        $( "#datepicker" ).datepicker({
+          showOn: "button",
+          buttonImage: "static/images/calendar.png",
+          buttonImageOnly: true,
+          buttonText: "Select date"
+        });
+        
+        function displayTime(value) {
+            var hours = Math.floor(value / 60);
+            var minutes = value - (hours * 60);
+
+            if(hours.toString().length == 1) hours = '0' + hours;
+            if(minutes.toString().length == 1) minutes = '0' + minutes;
+            
+            
+            //it is pm if hours from 12 onwards
+            suffix = (hours >= 12)? 'pm' : 'am';
+
+            //only -12 from hours if it is greater than 12 (if not back at mid night)
+            hours = (hours > 12)? hours -12 : hours;
+
+            //if 00 then it is 12 am
+            hours = (hours == '00')? 12 : hours;
+            
+            return hours + ":" + minutes + " " + suffix;
+        }
+        
+        $( "#slider-time-range" ).slider({
+          range: true,
+          min: 0,
+          max: 1440,
+          values: [0, 1440],
+          step: 30,
+          slide: function( event, ui ) {
+            $( "#time" ).val(displayTime(ui.values[0]) + ":" + displayTime(ui.values[1]));
+          }
+        });
+        $( "#time" ).val(displayTime($("#slider-time-range").slider("values", 0)) + ":" + displayTime($("#slider-time-range").slider("values", 1)));
+        });
     </script>
       
     
