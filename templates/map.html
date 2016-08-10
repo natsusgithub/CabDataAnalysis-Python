@@ -25,13 +25,23 @@
           <label for="next-location">
           <strong>Neighbor</strong>
           </label>
+		  <select id="neighborhood" name="neighborhood">
+			<option value="">- All - </option>
+			<option value="Financial District">Financial District</option>
+			<option value="Lower Manhattan">Lower Manhattan</option>
+			<option value="Midtown">Midtown</option>
+			<option value="Upper West Side">Upper West Side</option>
+			<option value="Upper East Side">Upper East Side</option>
+			<option value="Harlem">Harlem</option>
+			<option value="Upper Manhattan">Upper Manhattan</option>
+		  </select>
           <input id="next-location" type="text" name="next-location" placeholder="Type location">
           <input type="radio" name="neighborhood-type" value="Pick-up" checked>Pick-up
           <input type="radio" name="neighborhood-type" value="Drop-off">Drop-off    
         </div>
 		
         <strong>Date</strong>
-        <input type="text" id="datepicker">
+        <input type="text" id="datepicker" value="7/1/2015">
         
         <strong>Time</strong>
         <input type="text" id="time" readonly style="border:0; color:#f6931f; font-weight:bold;">
@@ -163,16 +173,15 @@
         }
         
         $( "#slider-time-range" ).slider({
-          range: true,
           min: 0,
           max: 1440,
-          values: [0, 1440],
-          step: 30,
+          value: 0,
+		  step: 30,
           slide: function( event, ui ) {
-            $( "#time" ).val(displayTime(ui.values[0]) + ":" + displayTime(ui.values[1]));
+            $( "#time" ).val(displayTime(ui.value));
           }
         });
-        $( "#time" ).val(displayTime($("#slider-time-range").slider("values", 0)) + ":" + displayTime($("#slider-time-range").slider("values", 1)));
+        $( "#time" ).val(displayTime($("#slider-time-range").slider("values", 0)));
         });
     </script>
       

@@ -12,8 +12,8 @@ var numrecords = 1000;
 var selectedStyle = 'light';
 
 var map_data = {
-	pickup_markers: [],
-	dropoff_markers: []
+	markers: [],
+	neighborhoods: [],
 };
 
 
@@ -213,18 +213,19 @@ function clearMarkers() {
 }
 
 function loadRawData() {
-
+ console.log($('#time').val())
   return $.ajax({
     url: "raw_data",
     type: 'GET',
     data: {
-      'startrow': startrow,
-	  'numrecords': numrecords
+      'neighborhood': $('#neighborhood').val(),
+	  'date': $('#datepicker').val(),
+	  'time': $('#time').val(),
+	  'ispickup': Store.get('showPickups')
     },
     dataType: "json",
     beforeSend: function() {
-	  console.log("getting records: " + startrow.toString() + " to " + (startrow + numrecords).toString())
-      if (rawDataIsLoading) {
+	  if (rawDataIsLoading) {
         return false;
       } else {
         rawDataIsLoading = true;
@@ -250,25 +251,21 @@ function processClusterMarkers(item) {
 */
 function processMarkers(item) {
 	  
-	if (Store.get('showPickups')){
-	  var pickup_latLng = new google.maps.LatLng(item.pickup_lat, item.pickup_long);
-	  var pickup_marker = new google.maps.Marker({
-	position: pickup_latLng,
-    icon: 'static/images/pickup.png',
-	map: map
+	  var myicon
+	  if (Store.get('showPickups') == true){
+		  myicon = 'static/images/pickup.png';
+	  }else{
+		  myicon = 'static/images/dropoff.png';
+	  }
+	  var latLng = new google.maps.LatLng(item.latitude, item.longitude);
+	  var marker = new google.maps.Marker({
+		position: latLng,
+		icon: myicon,
+		map: map
 		});
-		map_data.pickup_markers.push(pickup_marker);
-	}
-	if (Store.get('showDropoffs')){
-	  var dropoff_latLng = new google.maps.LatLng(item.dropoff_lat, item.dropoff_long);
-	  var dropoff_marker = new google.maps.Marker({
-	position: dropoff_latLng,
-    icon: 'static/images/dropoff.png',
-	map: map
-		});
-		map_data.dropoff_markers.push(dropoff_marker);
-	}
+		map_data.markers.push(marker);
 }
+
 
  // Removes the markers from the map, but keeps them in the array.
       function clearMarkers() {
@@ -289,28 +286,24 @@ function processMarkers(item) {
 // Sets the map on all markers in the array.
       function setMapOnAll(map) {
         for (var i = 0; i < dropoff_markers.length; i++) {
-			map_data["dropoff_markers"][i].setMap(map);
-			map_data["pickup_markers"][i].setMap(map);
+			map_data["markers"][i].setMap(map);
         }
       }
 
 function updateMap() {
+	  for (var i = 0; i < map_data.markers.length; i++ ){
+			  map_data.markers[i].setMap(null);
+		  }
+		
 	console.log('loading map')
   loadRawData().done(function(result) {
     
 	var options = {
 		imagePath:'static/images/m'
 	}
-	var hasMarkers = false;
 	$.each(result.cabs, function(){
 		processMarkers($(this)[0])
-		hasMarkers = true
 	});
-	
-	if (hasMarkers){
-		startrow += numrecords;
-	}
-		
 	
 	//var markerCluster1 = new MarkerClusterer(map, map_data.dropoff_markers, options)
 	//var markerCluster2 = new MarkerClusterer(map, map_data.pickup_markers, options)
@@ -331,8 +324,8 @@ function centerMap(lat, lng, zoom) {
 
 $(function() {
   // run interval timers to regularly update map
-  window.setInterval(updateMap, 5000);
-  //updateMap // TODO: only call it once for demo purposes
+  //window.setInterval(updateMap, 5000);
+  updateMap() // TODO: only call it once for demo purposes
   
   
   
@@ -340,15 +333,13 @@ $(function() {
   function buildSwitchChangeListener(type, storageKey) {
     return function () {
       Store.set(storageKey, this.checked);
-		  for (var i = 0; i < map_data[type].length; i++ ){
-			  map_data[type][i].setMap(this.checked ? map : null);
-		  }
+	    updateMap()
 	  }
   }
-
+	
   // Setup UI element interactions
-  $('#dropoff-switch').change(buildSwitchChangeListener(["dropoff_markers"], "showDropoffs"));
-  $('#pickup-switch').change(buildSwitchChangeListener(["pickup_markers"], "showPickups"));
-  $('#congestion-switch').change(buildSwitchChangeListener(["congestion"], "showCongestion"));
+  $('#pickup-switch').change(buildSwitchChangeListener(['pickup'], "showPickups"));
+  $('#slider-time-range').on("slidestop",function(){
+	  updateMap()});
   
 });

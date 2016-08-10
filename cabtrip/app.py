@@ -8,6 +8,7 @@ from flask_compress import Compress
 from . import config
 from .models import CabTrip
 
+
 compress = Compress()
 
 # the magic that happens that allows us to run the web application locally
@@ -33,9 +34,18 @@ class CabDataSample(Flask):
     # that is passed through here.  Will probably change this to load in batches
     def raw_data(self):
         d = {}
-        startrow = request.args.get('startrow')
-        fetch = request.args.get('numrecords')
-        d['cabs'] = CabTrip.get_range(startrow, fetch)
+        date = request.args.get('date')
+        time = request.args.get('time')
+        neighborhood = request.args.get('neighborhood')
+        ispickup = request.args.get("ispickup")
+
+        d['cabs'] = CabTrip.get_records(neighborhood, date, time, ispickup.lower() == "true")
+        d['neighborhoods'] = CabTrip.get_neighborhood()
+
+        if (bool(ispickup)):
+            d['marker_type'] = "pickup"
+        else:
+            d['marker_type'] = "dropoff"
         return jsonify(d)
 
     def get_loc(self):
