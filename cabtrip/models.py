@@ -219,7 +219,7 @@ def load_cabtrips(db):
     index = 1
     cabtrips = []
     print("loading cab data...")
-    with open('cabdata_all.csv') as csvfile:
+    with open('cabdata_20150701.csv') as csvfile:
         datareader = csv.reader(csvfile)
         next(datareader) # skip header row
         # speeds up the insert process significantly
@@ -312,8 +312,8 @@ def load_neighborhoods(db):
 def load_data(db):
     #load_neighborhoods(db)
 
-    load_cabtrips(db)
-
+   # load_cabtrips(db)
+    1==1    
    # update_neighborhood()
     
 
@@ -322,10 +322,10 @@ def load_data(db):
 
 def drop_tables(db):
     db.connect()
-    db.drop_tables([CabTrip, TypePayment, Neighborhood, NeighborhoodCoordinates], safe=True)
+    #  db.drop_tables([CabTrip, TypePayment, Neighborhood, NeighborhoodCoordinates], safe=True)
     db.close()
 
 def create_tables(db):
     db.connect()
-    db.create_tables([CabTrip,TypePayment,Neighborhood, NeighborhoodCoordinates], safe=True)
+    # db.create_tables([CabTrip,TypePayment,Neighborhood, NeighborhoodCoordinates], safe=True)
     db.close()
