@@ -30,6 +30,7 @@ class CabData(Flask):
                                lat=config['ORIGINAL_LATITUDE'],
                                lng=config['ORIGINAL_LONGITUDE'],
                                gmaps_key=config['GMAPS_KEY'],
+                               minute_block=config['MINUTE_BLOCK'],
                                is_fixed="inline"
                                )
 
@@ -40,15 +41,17 @@ class CabData(Flask):
         date = request.args.get('date')
         time = request.args.get('time')
         neighborhood = request.args.get('neighborhood')
+        neighborhoodtype = request.args.get('neighborhoodtype')
         ispickup = request.args.get("ispickup")
-        print(date,time,neighborhood,ispickup)
         starttime = datetime.strptime("{0} {1}".format(date, time), "%m/%d/%Y %I:%M %p")
         endtime = starttime + timedelta(minutes=config['MINUTE_BLOCK'])
-        print (starttime, endtime)
-        d['cabs'] = CabTrip.get_records(neighborhood, starttime, endtime, ispickup.lower() == "true")
-        tipamount = CabTrip.get_average_tip(neighborhood, starttime, endtime, ispickup)
+        
+        d['cabs'] = CabTrip.get_records(neighborhood, neighborhoodtype, starttime, endtime, ispickup.lower() == "true")
+        tipamount = CabTrip.get_average_tip(neighborhood, neighborhoodtype, starttime, endtime, ispickup)
+        congestion = CabTrip.get_average_congestion(neighborhood, neighborhoodtype, starttime, endtime, ispickup)
         d['avgtip'] = '{:20,.2f}'.format(tipamount)
-
+        d['percentcongestion'] = '{0:.0f}%'.format((1-congestion) * 100)
+        print(d['percentcongestion'])
         logfile.record(("retrieved {0} cab trip data, {1} avg tip").format(len(d['cabs']), d['avgtip']))
         
         if (bool(ispickup)):

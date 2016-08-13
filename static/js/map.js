@@ -15,7 +15,8 @@ var map_data = {
 	neighborhoods: [],
 	heatmapdata: [],
 	cabs: [],
-	avgtip: '0.00'
+	avgtip: '0.00',
+	percentcongestion: '0%'
 };
 
 
@@ -139,7 +140,6 @@ function initMap() {
     },
   });
 	
-  initSidebar();
   google.maps.event.addListenerOnce(map, 'idle', function() {
     updateMap();
   });
@@ -180,22 +180,6 @@ function createSearchMarker() {
   return marker;
 }
 
-function initSidebar() {
-  
-  var searchBox = new google.maps.places.SearchBox(document.getElementById('next-location'));
-  $("#next-location").css("background-color", $('#geoloc-switch').prop('checked') ? "#e0e0e0" : "#ffffff");
-
-  searchBox.addListener('places_changed', function() {
-    var places = searchBox.getPlaces();
-
-    if (places.length == 0) {
-      return;
-    }
-
-    var loc = places[0].geometry.location;
-    changeLocation(loc.lat(), loc.lng());
-  });
-}
 
 function clearSelection() {
   if (document.selection) {
@@ -221,8 +205,9 @@ function loadRawData() {
     type: 'GET',
     data: {
       'neighborhood': $('#neighborhood').val(),
+	  'neighborhoodtype': $('input[name=neighborhood-type]:checked').val(),
 	  'date': $('#datepicker').val(),
-	  'time': $('#time').val(),
+	  'time': $('#timevalue').val(),
 	  'ispickup': Store.get('showPickups')
     },
     dataType: "json",
@@ -255,7 +240,7 @@ function processMarkers(item) {
 		map: null
 		});
 		map_data.markers.push(marker);
-		
+	 // var heatmapmarker = {location: latLng, weight: item.congestion_index}	
 		
 		map_data.heatmapdata.push(latLng);
 	
@@ -291,10 +276,6 @@ function processMarkers(item) {
 			heatmap.setMap(null);
 		  }
       }
-function heatMap(){
-	console.log('load heat map')
-	
-}
 	  
 function updateMap() {
 
@@ -327,9 +308,14 @@ function updateMap() {
 			
 			showMarkers();
 			map_data.avgtip = (result.avgtip);
-			console.log(map_data.avgtip)
+			map_data.percentcongestion = (result.percentcongestion);
+			
+			//update summaries
 			$('#tipsummary').html(map_data.avgtip)
+			$('#congestionsummary').html(map_data.percentcongestion)
 			$('.tripcount').html((result.cabs.length))
+			
+			
   });
 
 }
@@ -358,29 +344,5 @@ $(function() {
   // run interval timers to regularly update map
   //window.setInterval(updateMap, 5000);
   //updateMap() // TODO: only call it once for demo purposes
-  
-  
-  
-  //Wipe off/restore map icons when switches are toggled
-  function buildSwitchChangeListener(type, storageKey) {
-    return function () {
-      Store.set(storageKey, this.checked);
-	  if (type != "heatmap"){
-		 updateMap();
-	  }
-	}
-  }
-	
-  // Setup UI element interactions
-  $('#pickup-switch').change(function(){
-	  Store.set("showPickups", this.checked);
-	  updateMap();
-  });
-  $('#slider-time-range').on("slidestop",function(){
-	  updateMap();
-	  });
-  $('#congestion-switch').change(function(){
-	  Store.set("showCongestion", this.checked);
-	  showMarkers();
-  });
+
 });

@@ -7,6 +7,8 @@ import csv
 import sys
 
 import log
+import datascience
+import pandas
 
 from peewee import Model, SqliteDatabase, InsertQuery, DecimalField, PrimaryKeyField, \
                    IntegerField, CharField, DoubleField, DateTimeField, fn
@@ -16,15 +18,16 @@ from matplotlib.path import Path
 from . import config
 
 
+dbname = "cabdata.db"
 db = None
 logfile = log.Log("cabtrip.log")
-
+deeta = []
 # initializing a sqllitedb
 def init_database():
     global db
     if db is not None:
         return db
-    db = SqliteDatabase("cabdata.db")
+    db = SqliteDatabase(dbname)
     return db
 
 class BaseModel(Model):
@@ -69,6 +72,7 @@ class CabTrip(BaseModel):
 
     # calculated fields
     trip_length_minutes = DoubleField()
+    avg_speed = DoubleField()
     congestion_index = IntegerField(null=True)
 	
     @classmethod
@@ -81,27 +85,68 @@ class CabTrip(BaseModel):
 
         return cabs
 
+    @classmethod    
+    def build_where_statement(self, neighborhoodtype, ispickup):
+        datatype = "dropoff"
+        neighborhooddatatype = "dropoff"
+        if (ispickup):
+            datatype = "pickup"
+            
+        if (neighborhoodtype == 'Pick-up'):
+            neighborhooddatatype = "pickup"
+
+        return('WHERE {0}_time <= ? and {0}_time >= ? and {1}_neighborhood like ?'.format(datatype, neighborhooddatatype))
+    
     @classmethod
-    def get_records(self, neighborhood, starttime, endtime, ispickup):
+    def get_records(self, neighborhood, neighborhoodtype, starttime, endtime, ispickup):
         query = None
         cabs = []
-        print("begin")
+        datatype = "dropoff"
         if (ispickup):
-            query = (CabTrip
-                     .select(CabTrip.pickup_lat.alias('latitude'), CabTrip.pickup_long.alias('longitude'))
-                     .where((CabTrip.pickup_neighborhood == neighborhood) &
-                         (CabTrip.pickup_time.between(starttime, endtime))).dicts())
+            datatype = "pickup"
             
-            
-        else:
-            query = (CabTrip
-                     .select(CabTrip.dropoff_lat.alias('latitude'), CabTrip.dropoff_long.alias('longitude'))
-                     .where((CabTrip.dropoff_neighborhood == neighborhood) &
-                         (CabTrip.dropoff_time.between(starttime, endtime))).dicts())
-
+        
+        #build the sql statement.  although we are doing string format, we are controlling the type of data that can be put there
+        #to avoid sql injection.  the expressions does use parameterized sql
+        sql = "select {0}_lat as latitude, {0}_long as longitude, congestion_index FROM cabtrip {1}".format(datatype, self.build_where_statement(neighborhoodtype, ispickup))
+        query = CabTrip.raw(sql, endtime, starttime, '%{0}%'.format(neighborhood)).dicts()
         for p in query:
-                cabs.append(p)
+            cabs.append(p)
+
+
+        # attempting to convert a dataframe from pandas to a dictionary that we can use.  not having much luck...            
+        '''
+        columns = ['cab_id', 'dropoff_lat', 'dropoff_long', 'congestion_index']
+
+        
+        
+        test = (pandas
+                .DataFrame((deeta.ix[(deeta['dropoff_time'] >= starttime) & \
+                         (deeta['dropoff_time'] <= endtime)]), \
+                           columns = columns))
+
+        area_dict = dict(zip(test.dropoff_lat, test.dropoff_long, test.congestion_index))
+
+        print(area_dict)
+        #print(test.set_index('cab_id').to_dict())
+        #print(test)
+        print(len(test))
+        print(len(query))
+        '''
         return cabs
+
+    @classmethod
+    def get_average_congestion(self, neighborhood, neighborhoodtype, starttime, endtime, ispickup):
+        query = None
+
+        #build the sql statement.  although we are doing string format, we are controlling the type of data that can be put there
+        #to avoid sql injection.  the expressions does use parameterized sql
+        sql = "select avg(congestion_index) / 5 FROM cabtrip {0}".format(self.build_where_statement(neighborhoodtype, ispickup))
+        congestion = CabTrip.raw(sql, endtime, starttime, '%{0}%'.format(neighborhood)).scalar()
+
+        if (congestion == None):
+            return 0
+        return congestion
 
     # hardcode neighborlist
     @classmethod
@@ -115,27 +160,14 @@ class CabTrip(BaseModel):
                 {'neighbor':"Upper Manhattan"}]
 
     @classmethod
-    def get_average_tip(self, neighborhood, starttime, endtime, ispickup):
+    def get_average_tip(self, neighborhood, neighborhoodtype, starttime, endtime, ispickup):
         query = None
-        cabs = []
-        tipamount = 0
 
-        if (ispickup):
-            tipamount = (CabTrip
-                     .select(fn.AVG(CabTrip.tip_amount))
-                     .where(
-                         (CabTrip.pickup_neighborhood == neighborhood) &
-                         (CabTrip.payment_type == 1) &
-                         (CabTrip.pickup_time.between(starttime, endtime)))
-                     .scalar())
-        else:
-            tipamount = (CabTrip
-                     .select(fn.AVG(CabTrip.tip_amount))
-                     .where(
-                         (CabTrip.pickup_neighborhood == neighborhood) &
-                         (CabTrip.payment_type == 1) &
-                         (CabTrip.pickup_time.between(starttime, endtime)))
-                     .scalar())
+        #build the sql statement.  although we are doing string format, we are controlling the type of data that can be put there
+        #to avoid sql injection.  the expressions does use parameterized sql
+        sql = "select avg(tip_amount) FROM cabtrip {0} and payment_type == 1".format(self.build_where_statement(neighborhoodtype, ispickup))
+        tipamount = CabTrip.raw(sql, endtime, starttime, '%{0}%'.format(neighborhood)).scalar()
+
         if (tipamount == None):
             return 0
         
@@ -182,18 +214,23 @@ def update_neighborhood():
 def get_static_neighborhood(lat, long):
     float_lat = float(lat)
     float_long = float(long)
-    
-    if (float_lat <= 40.713919):
+    if (float_long < -74.021587):
+        return("New Jersey")
+    elif (float_lat <= 40.698267):
+        return ("Brooklyn")
+    elif (float_lat <= 40.744843 and float_long >= -73.966656):
+        return ("Williamsburg")
+    elif (float_lat <= 40.713919):
         return("Financial District")
     elif(float_lat <= 40.746310):
         return ("Lower Manhattan")
     elif(float_lat <= 40.763345):
         return ("Midtown")
     elif(float_lat <= 40.799870):
-        if (float_long <= -73.957729):
-            return ("Upper EastSide")
+        if (float_long >= -73.957729):
+            return ("Upper East Side")
         else:
-            return ("Upper WestSide")
+            return ("Upper West Side")
     elif(float_lat <=40.823126):
         return("Harlem")
     elif(float_lat <= 40.837544):
@@ -250,8 +287,13 @@ def load_cabtrips(db):
             for row in datareader:
                 pickuptime = convert_str_to_date(row[1])
                 dropofftime = convert_str_to_date(row[2])
+                pickupneighborhood = get_static_neighborhood(row[6],row[5])
+                dropoffneighborhood = get_static_neighborhood(row[10],row[9])
+                triplengthminutes = (dropofftime-pickuptime).total_seconds() / 60
                 # to speed up inserts, we create an array first and insert a giant list of it in bulk
-                if (isvalid_cabtrip_record(row) and isvalid_trip_time(pickuptime, dropofftime)):
+                if (isvalid_cabtrip_record(row)
+                    and isvalid_trip_time(pickuptime, dropofftime)
+                    and (pickupneighborhood != "" or dropoffneighborhood != "")):
                     cabtrips.append({
                                    "cab_id": index, \
                                    "pickup_time": pickuptime, \
@@ -265,9 +307,10 @@ def load_cabtrips(db):
                                    "payment_type": row[11], \
                                    "tip_amount": row[15], \
                                    "fare_amount": row[12], \
-                                   "pickup_neighborhood": get_static_neighborhood(row[6],row[5]),\
-                                   "dropoff_neighborhood": get_static_neighborhood(row[10],row[9]),\
-                                   "trip_length_minutes": (dropofftime-pickuptime).total_seconds() / 60,\
+                                   "pickup_neighborhood": pickupneighborhood,\
+                                   "dropoff_neighborhood": dropoffneighborhood,\
+                                   "trip_length_minutes": triplengthminutes ,\
+                                   "avg_speed": float(row[4]) / triplengthminutes * 60   
                                      })
                     index += 1
                                
@@ -284,6 +327,21 @@ def load_cabtrips(db):
     __progressbar(index)
     logfile.record("load completed! {0} record(s)".format(index))
     return index
+
+def apply_data_science_cabtrips():
+    global deeta
+    logfile.record("Apply calculations")
+    datasci = datascience.datascience_utilities(dbname)
+    deeta = datasci.read_all_data()
+    quants = datasci.get_speed_index_quantiles()
+
+    # update congestion index based on the calculated quants
+    CabTrip.update(congestion_index = 1).where((CabTrip.avg_speed < quants[0.2])).execute()
+    CabTrip.update(congestion_index = 2).where((CabTrip.avg_speed < quants[0.4]) & (CabTrip.avg_speed >= quants[0.2])).execute()
+    CabTrip.update(congestion_index = 3).where((CabTrip.avg_speed < quants[0.6]) & (CabTrip.avg_speed >= quants[0.4])).execute()
+    CabTrip.update(congestion_index = 4).where((CabTrip.avg_speed < quants[0.8]) & (CabTrip.avg_speed >= quants[0.6])).execute()
+    CabTrip.update(congestion_index = 5).where((CabTrip.avg_speed >= quants[0.8])).execute()
+    
 
 def load_coordinates(neighborhood_id, str_coordinates):
     coordinateslist = str_coordinates.split(',')
