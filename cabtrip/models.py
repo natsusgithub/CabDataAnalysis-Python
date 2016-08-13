@@ -143,7 +143,7 @@ class CabTrip(BaseModel):
         #to avoid sql injection.  the expressions does use parameterized sql
         sql = "select avg(trip_length_minutes) FROM cabtrip WHERE pickup_neighborhood == ? " \
               "and dropoff_neighborhood == ? and pickup_time <= ? and pickup_time >= ?"
-        average_time = CabTrip.raw(sql, endtime, starttime).scalar()
+        average_time = CabTrip.raw(sql, startneighborhood, endneighborhood, endtime, starttime).scalar()
 
         if (average_time == None):
             return 0
@@ -383,7 +383,6 @@ def apply_data_science_cabtrips():
     CabTrip.update(congestion_index = 3).where((CabTrip.avg_speed < quants[0.6]) & (CabTrip.avg_speed >= quants[0.4])).execute()
     CabTrip.update(congestion_index = 4).where((CabTrip.avg_speed < quants[0.8]) & (CabTrip.avg_speed >= quants[0.6])).execute()
     CabTrip.update(congestion_index = 5).where((CabTrip.avg_speed >= quants[0.8])).execute()
-    
 
 def load_coordinates(neighborhood_id, str_coordinates):
     coordinateslist = str_coordinates.split(',')

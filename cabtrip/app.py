@@ -10,6 +10,7 @@ from . import config
 import log
 from .models import CabTrip
 
+import datascience
 
 compress = Compress()
 logfile = log.Log("cabtrip.log")
@@ -23,6 +24,7 @@ class CabData(Flask):
         self.route("/", methods=['GET'])(self.fullmap)
         self.route("/raw_data", methods=['GET'])(self.raw_data)
         self.route("/get_loc", methods=['GET'])(self.get_loc)
+        self.route("/load_graphs", methods=['POST'])(self.load_graphs)
 
     # this will load googlemaps data from the API
     def fullmap(self):
@@ -33,6 +35,13 @@ class CabData(Flask):
                                minute_block=config['MINUTE_BLOCK'],
                                is_fixed="inline"
                                )
+
+    def load_graphs(self):
+        datasci = datascience.datascience_utilities('cabdata.db')
+        deeta = datasci.read_all_data()
+        quants = datasci.get_speed_index_quantiles()
+        datasci.get_plot_speed()
+        return []
 
     # raw data that is called asyncronously.  Have to limit the amount of data
     # that is passed through here.  Will probably change this to load in batches
@@ -51,8 +60,9 @@ class CabData(Flask):
         congestion = CabTrip.get_average_congestion(neighborhood, neighborhoodtype, starttime, endtime, ispickup)
         avttimeminutes =  CabTrip.get_average_time('Midtown', 'Upper West Side', starttime, endtime)
         tippercentage = CabTrip.get_tip_percentage(neighborhood, neighborhoodtype, starttime, endtime, ispickup)
+        avgcost = CabTrip.get_average_cost('Midtown', 'Upper West Side', starttime, endtime)
         d['avgtip'] = '{:20,.2f}'.format(tipamount)
-        d['avgcost'] = '{:20,.2f}'.format(costamount)
+        d['avgcost'] = '{:20,.2f}'.format(avgcost)
         d['percentagetip'] = '{0:.0f}%'.format(tippercentage * 100)
         d['percentcongestion'] = '{0:.0f}%'.format((1-congestion) * 100)
         d['avgtimeminutes'] = '{0:.0f} minutes'.format(avttimeminutes)

@@ -279,6 +279,18 @@ function processMarkers(item) {
 			heatmap.setMap(null);
 		  }
       }
+
+function loadGraphs(){
+	$.ajax({
+		url: "load_graphs",
+		type: 'POST',
+		success:function(result){
+			//this should load graphs???
+		}
+    
+    
+  });
+}
 	  
 function updateMap() {
 

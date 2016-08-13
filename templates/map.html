@@ -97,7 +97,7 @@
 			</div>
 			
 		   </div>
-            <a href="#" class="more-info2" data-widget="congestion">More info</a>
+            <a href="#" class="more-info2 loadgraph" data-widget="congestion">More info</a>
         </div>
         
         <div id="widget-tip-estimator" class="widget" style="background-image:url(/static/images/tip-estimator.png)">
@@ -189,6 +189,10 @@
 		  });
 		  $('.neighborhood-type').change(function(){
 			 updateMap();
+		  });
+		  
+		  $('.loadgraph').click(function(){
+			loadGraphs();
 		  });
         $(".more-info").click(function() {
            widget = $(this).data("widget");

@@ -64,18 +64,25 @@ class datascience_utilities:
         quants=deeta[(deeta.avg_speed<50) & (deeta.ridetime_m>1)].avg_speed.quantile([0.2, 0.4, 0.6, 0.8])
         return quants
 
-    def get_congestion_index(self, key):
-        avgspeed = deeta.avg_speed[deeta.cab_id == key].any()
-        if (avgspeed < quants[0.2]):
-            return 1
-        if (avgspeed < quants[0.4]):
-            return 2
-        if (avgspeed < quants[0.6]):
-            return 3
-        if (avgspeed < quants[0.8]):
-            return 4
-        if (avgspeed >= quants[0.8]):
-            return 5
+    def get_plot_speed(self):
+
+        deeta.describe()
+
+        deeta[(deeta.avg_speed<50) & (deeta.ridetime_m>1)].avg_speed.hist(bins=50, color='r')
+        plt.show()
+        deeta[(deeta.avg_speed<50) & (deeta.ridetime_m>1)].describe()
+
+        deeta[(deeta.avg_speed<50) & (deeta.ridetime_m>1) & (deeta.ridetime_m<80)].ridetime_m.hist(bins=40, color='r')
+        plt.show()
+        deeta[(deeta.avg_speed<50) & (deeta.ridetime_m>1) & (deeta.ridetime_m<80)].describe()
+        
+        deeta[(deeta.avg_speed<50) & (deeta.ridetime_m>1)].avg_speed.hist(bins=50, color='r')
+        plt.axvline(quants[0.2], color='b',linewidth=3)
+        plt.axvline(quants[0.4], color='b', linewidth=3)
+        plt.axvline(quants[0.6], color='b', linewidth=3)
+        plt.axvline(quants[0.8], color='b', linewidth=3)
+        plt.show()
+
                 
         
 
