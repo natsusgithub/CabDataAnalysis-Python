@@ -244,9 +244,9 @@ function processMarkers(item) {
 	  
 	  var myicon
 	  if (Store.get('showPickups') == true){
-		  myicon = 'static/images/pickup.png';
+		  myicon = 'static/images/pickup_norence.png';
 	  }else{
-		  myicon = 'static/images/dropoff.png';
+		  myicon = 'static/images/dropoff_norence.png';
 	  }
 	  var latLng = new google.maps.LatLng(item.latitude, item.longitude);
 	  var marker = new google.maps.Marker({

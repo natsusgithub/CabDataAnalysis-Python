@@ -41,14 +41,13 @@ class CabData(Flask):
         time = request.args.get('time')
         neighborhood = request.args.get('neighborhood')
         ispickup = request.args.get("ispickup")
-
+        print(date,time,neighborhood,ispickup)
         starttime = datetime.strptime("{0} {1}".format(date, time), "%m/%d/%Y %I:%M %p")
         endtime = starttime + timedelta(minutes=config['MINUTE_BLOCK'])
-        
+        print (starttime, endtime)
         d['cabs'] = CabTrip.get_records(neighborhood, starttime, endtime, ispickup.lower() == "true")
-        tipamount = CabTrip.get_average_tip(neighborhood, starttime, endtime)
+        tipamount = CabTrip.get_average_tip(neighborhood, starttime, endtime, ispickup)
         d['avgtip'] = '{:20,.2f}'.format(tipamount)
-        d['neighborhoods'] = CabTrip.get_neighborhood()
 
         logfile.record(("retrieved {0} cab trip data, {1} avg tip").format(len(d['cabs']), d['avgtip']))
         

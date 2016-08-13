@@ -85,20 +85,20 @@ class CabTrip(BaseModel):
     def get_records(self, neighborhood, starttime, endtime, ispickup):
         query = None
         cabs = []
+        print("begin")
         if (ispickup):
             query = (CabTrip
                      .select(CabTrip.pickup_lat.alias('latitude'), CabTrip.pickup_long.alias('longitude'))
-                     .where(#(CabTrip.pickup_neighborhood == neighborhood or neighborhood == "") &
+                     .where((CabTrip.pickup_neighborhood == neighborhood) &
                          (CabTrip.pickup_time.between(starttime, endtime))).dicts())
             
             
         else:
             query = (CabTrip
                      .select(CabTrip.dropoff_lat.alias('latitude'), CabTrip.dropoff_long.alias('longitude'))
-                     .where(#(CabTrip.dropoff_neighborhood == neighborhood or neighborhood == "") &
+                     .where((CabTrip.dropoff_neighborhood == neighborhood) &
                          (CabTrip.dropoff_time.between(starttime, endtime))).dicts())
 
-        print(type(query[0]))
         for p in query:
                 cabs.append(p)
         return cabs
@@ -115,15 +115,30 @@ class CabTrip(BaseModel):
                 {'neighbor':"Upper Manhattan"}]
 
     @classmethod
-    def get_average_tip(self, neighborhood, starttime, endtime):
+    def get_average_tip(self, neighborhood, starttime, endtime, ispickup):
         query = None
         cabs = []
-        tipamount = (CabTrip
-                 .select(fn.AVG(CabTrip.tip_amount))
-                 .where(#(CabTrip.pickup_neighborhood == neighborhood or neighborhood == "") &
-                     (CabTrip.payment_type == 1) &
-                     (CabTrip.pickup_time.between(starttime, endtime)))
-                 .scalar())
+        tipamount = 0
+
+        if (ispickup):
+            tipamount = (CabTrip
+                     .select(fn.AVG(CabTrip.tip_amount))
+                     .where(
+                         (CabTrip.pickup_neighborhood == neighborhood) &
+                         (CabTrip.payment_type == 1) &
+                         (CabTrip.pickup_time.between(starttime, endtime)))
+                     .scalar())
+        else:
+            tipamount = (CabTrip
+                     .select(fn.AVG(CabTrip.tip_amount))
+                     .where(
+                         (CabTrip.pickup_neighborhood == neighborhood) &
+                         (CabTrip.payment_type == 1) &
+                         (CabTrip.pickup_time.between(starttime, endtime)))
+                     .scalar())
+        if (tipamount == None):
+            return 0
+        
         return tipamount
     
 # helper to display a progress bar
@@ -226,7 +241,7 @@ def load_cabtrips(db):
     starttime = time.time()
     index = 1
     cabtrips = []
-    with open('cabdata.csv') as csvfile:
+    with open('cabdata_20150701.csv') as csvfile:
         datareader = csv.reader(csvfile)
         next(datareader) # skip header row
         # speeds up the insert process significantly

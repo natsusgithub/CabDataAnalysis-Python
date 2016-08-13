@@ -12,16 +12,19 @@ from threading import Thread
 
 from cabtrip import config
 from cabtrip.app import CabData
+from cabtrip.models import CabTrip
 #from cabtrip.search import create_search_threads, search_loop
 from cabtrip.models import init_database, create_tables, drop_tables, CabTrip, load_data
 
 if __name__ == '__main__':
 
-    
+    reload = True
     db = init_database()
-    drop_tables(db)
-    create_tables(db)
-    load_data(db)
+
+    if (CabTrip.select().count() == 0 or reload):
+        drop_tables(db)
+        create_tables(db)
+        load_data(db)
 
     # hardcoded central park location to default google maps initial view
     position = [40.783129, -73.965206]
