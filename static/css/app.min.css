@@ -2640,11 +2640,24 @@ html {
     margin-top: 10px;
 }
 
+.summary-info{
+	position:relative;
+	height:100px;
+	top:40px;
+	padding-left:10px;
+}
 .more-info {
     position: relative !important;
     float: right;
     right: 10px;
     top: 100px;
+    color: #FFF;
+}
+
+.more-info2 {
+    position: relative !important;
+    float: right;
+    right: 10px;
     color: #FFF;
 }
 
