@@ -297,7 +297,7 @@ function updateMap() {
 				pointArray = new google.maps.MVCArray(map_data.heatmapdata);
 				heatmap = new google.maps.visualization.HeatmapLayer({
 					data: pointArray,
-					radius: 15
+					radius: 10,
 				});
 			}else{
 				pointArray.clear();

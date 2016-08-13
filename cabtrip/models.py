@@ -85,7 +85,6 @@ class CabTrip(BaseModel):
 
         return cabs
 
-    @classmethod    
     def build_where_statement(self, neighborhoodtype, ispickup):
         datatype = "dropoff"
         neighborhooddatatype = "dropoff"
@@ -136,12 +135,26 @@ class CabTrip(BaseModel):
         return cabs
 
     @classmethod
+    def get_average_time(self, startneighborhood, endneighborhood, starttime, endtime):
+        query = None
+
+        #build the sql statement.  although we are doing string format, we are controlling the type of data that can be put there
+        #to avoid sql injection.  the expressions does use parameterized sql
+        sql = "select avg(trip_length_minutes) FROM cabtrip WHERE pickup_neighborhood == 'Midtown' " \
+              "and dropoff_neighborhood == 'Upper West Side' and pickup_time <= ? and pickup_time >= ?"
+        average_time = CabTrip.raw(sql, endtime, starttime, '%{0}%'.format(neighborhood)).scalar()
+
+        if (average_time == None):
+            return 0
+        return average_time
+
+    @classmethod
     def get_average_congestion(self, neighborhood, neighborhoodtype, starttime, endtime, ispickup):
         query = None
 
         #build the sql statement.  although we are doing string format, we are controlling the type of data that can be put there
         #to avoid sql injection.  the expressions does use parameterized sql
-        sql = "select avg(congestion_index) / 5 FROM cabtrip {0}".format(self.build_where_statement(neighborhoodtype, ispickup))
+        sql = "select avg(congestion_index - 1) / 4 FROM cabtrip {0}".format(self.build_where_statement(neighborhoodtype, ispickup))
         congestion = CabTrip.raw(sql, endtime, starttime, '%{0}%'.format(neighborhood)).scalar()
 
         if (congestion == None):
