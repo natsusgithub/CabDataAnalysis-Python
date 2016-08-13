@@ -5,17 +5,19 @@ import os
 import sys
 import time
 
+import log
+
 from threading import Thread
 # from flask_cors import CORS
 
 from cabtrip import config
-from cabtrip.app import CabDataSample
+from cabtrip.app import CabData
 #from cabtrip.search import create_search_threads, search_loop
 from cabtrip.models import init_database, create_tables, drop_tables, CabTrip, load_data
 
-
 if __name__ == '__main__':
 
+    
     db = init_database()
     drop_tables(db)
     create_tables(db)
@@ -29,8 +31,8 @@ if __name__ == '__main__':
     config['ORIGINAL_LATITUDE'] = position[0]
     config['ORIGINAL_LONGITUDE'] = position[1]
     config['GMAPS_KEY'] = 'AIzaSyDEEvXvhoUgKWam-XAYVo-YhxjWdBbn5Fc'
-    
-    app = CabDataSample(__name__)
+    config['MINUTE_BLOCK'] = 30
+    app = CabData(__name__)
 
     config['ROOT_PATH'] = app.root_path
 

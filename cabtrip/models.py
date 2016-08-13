@@ -6,6 +6,8 @@ import time
 import csv
 import sys
 
+import log
+
 from peewee import Model, SqliteDatabase, InsertQuery, DecimalField, PrimaryKeyField, \
                    IntegerField, CharField, DoubleField, DateTimeField, fn
 
@@ -15,6 +17,7 @@ from . import config
 
 
 db = None
+logfile = log.Log("cabtrip.log")
 
 # initializing a sqllitedb
 def init_database():
@@ -22,7 +25,6 @@ def init_database():
     if db is not None:
         return db
     db = SqliteDatabase("cabdata.db")
-    print("SqliteDatabase created!")
     return db
 
 class BaseModel(Model):
@@ -33,22 +35,6 @@ class BaseModel(Model):
     def get_all(self):
         results = [m for m in self.select().dicts()]
         return results
-
-class TypePayment(BaseModel):
-    # properties
-    # code
-    # description
-    code = IntegerField(primary_key=True)
-    description = CharField()
-
-    @classmethod
-    def get_all(self):
-        results = [m for m in self.select().dicts()]
-        return results
-
-    # get one row
-    def find(self, code):
-        return self.get(self.code == code)
 
 class NeighborhoodCoordinates(BaseModel):
     coordinates_id = PrimaryKeyField(primary_key=True)
@@ -81,6 +67,8 @@ class CabTrip(BaseModel):
     tip_amount = DoubleField()
     fare_amount = DoubleField()
 
+    # calculated fields
+    trip_length_minutes = DoubleField()
     congestion_index = IntegerField(null=True)
 	
     @classmethod
@@ -94,26 +82,23 @@ class CabTrip(BaseModel):
         return cabs
 
     @classmethod
-    def get_records(self, neighborhood, date, time, ispickup):
-        startdate = datetime.strptime("{0} {1}".format(date, time), "%m/%d/%Y %I:%M %p")
-        enddate = startdate + timedelta(minutes=30)
+    def get_records(self, neighborhood, starttime, endtime, ispickup):
         query = None
-        print(neighborhood == "")
-        print (startdate, enddate, neighborhood, ispickup)
         cabs = []
         if (ispickup):
             query = (CabTrip
                      .select(CabTrip.pickup_lat.alias('latitude'), CabTrip.pickup_long.alias('longitude'))
                      .where(#(CabTrip.pickup_neighborhood == neighborhood or neighborhood == "") &
-                         (CabTrip.pickup_time.between(startdate, enddate))).dicts())
+                         (CabTrip.pickup_time.between(starttime, endtime))).dicts())
             
             
         else:
             query = (CabTrip
                      .select(CabTrip.dropoff_lat.alias('latitude'), CabTrip.dropoff_long.alias('longitude'))
                      .where(#(CabTrip.dropoff_neighborhood == neighborhood or neighborhood == "") &
-                         (CabTrip.dropoff_time.between(startdate, enddate))).dicts())
-        
+                         (CabTrip.dropoff_time.between(starttime, endtime))).dicts())
+
+        print(type(query[0]))
         for p in query:
                 cabs.append(p)
         return cabs
@@ -128,15 +113,30 @@ class CabTrip(BaseModel):
                 {'neighbor':"Upper East Side"},
                 {'neighbor':"Harlem"},
                 {'neighbor':"Upper Manhattan"}]
+
+    @classmethod
+    def get_average_tip(self, neighborhood, starttime, endtime):
+        query = None
+        cabs = []
+        tipamount = (CabTrip
+                 .select(fn.AVG(CabTrip.tip_amount))
+                 .where(#(CabTrip.pickup_neighborhood == neighborhood or neighborhood == "") &
+                     (CabTrip.payment_type == 1) &
+                     (CabTrip.pickup_time.between(starttime, endtime)))
+                 .scalar())
+        return tipamount
     
 # helper to display a progress bar
 def __progressbar(i):
-        loadicon = "|" # potentially have an animated icon.  static for now
 
-        # write to the same row
-        sys.stdout.write('\r')
-        sys.stdout.write(loadicon + " " + str(i) + " rows inserted...")
-        sys.stdout.flush()
+        if (not logfile.silent):
+            loadicon = "|" # potentially have an animated icon.  static for now
+
+            # write to the same row
+            sys.stdout.write('\r')
+            sys.stdout.write(loadicon + " " + str(i) + " rows inserted...")
+            sys.stdout.flush()
+        
 
 #converts string formatted in 1/1/2001 0:00
 def convert_str_to_date(item):
@@ -210,7 +210,15 @@ def get_neighborhood(lat, long):
 
 # check and exclude records that are invalid
 def isvalid_cabtrip_record(row):
+    # checks if any of the locations are 0 lat or 0 long
     if (row[6] == "0") or (row[5] == "0") or (row[9] == "0") or (row[10] == "0"):
+        return False
+
+    return True
+
+def isvalid_trip_time(starttime, endtime):
+    trip_time = endtime - starttime
+    if (trip_time.total_seconds() <= 0 or (trip_time.total_seconds() / 60) > 720):
         return False
     return True
 
@@ -218,22 +226,23 @@ def load_cabtrips(db):
     starttime = time.time()
     index = 1
     cabtrips = []
-    print("loading cab data...")
-    with open('cabdata_20150701.csv') as csvfile:
+    with open('cabdata.csv') as csvfile:
         datareader = csv.reader(csvfile)
         next(datareader) # skip header row
         # speeds up the insert process significantly
         cabtrips = []
         with db.atomic():
             for row in datareader:
+                pickuptime = convert_str_to_date(row[1])
+                dropofftime = convert_str_to_date(row[2])
                 # to speed up inserts, we create an array first and insert a giant list of it in bulk
-                if (isvalid_cabtrip_record(row)):
+                if (isvalid_cabtrip_record(row) and isvalid_trip_time(pickuptime, dropofftime)):
                     cabtrips.append({
                                    "cab_id": index, \
-                                   "pickup_time": convert_str_to_date(row[1]), \
+                                   "pickup_time": pickuptime, \
                                    "pickup_lat": row[6], \
                                    "pickup_long": row[5], \
-                                   "dropoff_time": convert_str_to_date(row[2]), \
+                                   "dropoff_time": dropofftime, \
                                    "dropoff_lat": row[10], \
                                    "dropoff_long": row[9], \
                                    "ride_distance": row[4], \
@@ -243,10 +252,11 @@ def load_cabtrips(db):
                                    "fare_amount": row[12], \
                                    "pickup_neighborhood": get_static_neighborhood(row[6],row[5]),\
                                    "dropoff_neighborhood": get_static_neighborhood(row[10],row[9]),\
+                                   "trip_length_minutes": (dropofftime-pickuptime).total_seconds() / 60,\
                                      })
                     index += 1
                                
-                    if (index % 70 == 0):
+                    if (index % 60 == 0):
                         CabTrip.insert_many(cabtrips).execute()
                         cabtrips = []
                         
@@ -257,7 +267,7 @@ def load_cabtrips(db):
         if (len(cabtrips) > 0):
             CabTrip.insert_many(cabtrips).execute()
     __progressbar(index)
-    print('completed!')
+    logfile.record("load completed! {0} record(s)".format(index))
     return index
 
 def load_coordinates(neighborhood_id, str_coordinates):
@@ -281,7 +291,7 @@ def load_neighborhoods(db):
     starttime = time.time()
     index = 1
     neighborhoods = []
-    print("loading neighborhood data...")
+    logfile.record("loading neighborhood data...")
     with open('nynta.csv') as neighborhoodfile:
         maxInt = sys.maxsize
         while True:
@@ -305,27 +315,22 @@ def load_neighborhoods(db):
                              .replace(")","")
                              .replace("MULTIPOLYGON", "")
                              .replace("(","").strip())
-    print('completed!')
+    logfile.record('completed!')
 
 # this will be configurable where we can pass arguments on whether to reload
 # the data or to use whatever is in Sqlite
 def load_data(db):
-    #load_neighborhoods(db)
-
-   # load_cabtrips(db)
-    1==1    
-   # update_neighborhood()
+    logfile.record("Loading cab data...")
+    load_cabtrips(db)
     
-
-
-   
-
 def drop_tables(db):
     db.connect()
-    #  db.drop_tables([CabTrip, TypePayment, Neighborhood, NeighborhoodCoordinates], safe=True)
+    db.drop_tables([CabTrip, Neighborhood, NeighborhoodCoordinates], safe=True)
+    logfile.record("Database tables dropped!")
     db.close()
 
 def create_tables(db):
     db.connect()
-    # db.create_tables([CabTrip,TypePayment,Neighborhood, NeighborhoodCoordinates], safe=True)
+    db.create_tables([CabTrip, Neighborhood, NeighborhoodCoordinates], safe=True)
+    logfile.record("Database tables created!")
     db.close()

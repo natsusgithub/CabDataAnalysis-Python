@@ -8,9 +8,6 @@ var heatmap;
 var rawDataIsLoading = false;
 var locationMarker;
 var marker;
-var startrow = 1;
-var numrecords = 1000;
-var selectedStyle = 'light';
 var pointArray; 
 
 var map_data = {
@@ -18,6 +15,7 @@ var map_data = {
 	neighborhoods: [],
 	heatmapdata: [],
 	cabs: [],
+	avgtip: '0.00'
 };
 
 
@@ -240,19 +238,8 @@ function loadRawData() {
     }
   })
 }
-/*
-function processClusterMarkers(item) {
-	  
-	  //map_data.cabs[item.id] = item
-	  var latLng = new google.maps.LatLng(item.pickup_lat, item.pickup_long);
-	  var pickup_marker = new google.maps.Marker({
-		position: latLng,
-    //icon: 'static/images/pickup.png'
-		});
-	  map_data.pickup_markers.push(pickup_marker)
-	  return marker;
-    }
-*/
+
+
 function processMarkers(item) {
 	  
 	  var myicon
@@ -311,36 +298,38 @@ function heatMap(){
 	  
 function updateMap() {
 
+	
 	  for (var i = 0; i < map_data.markers.length; i++ ){
 			  map_data.markers[i].setMap(null);
 		  }
 		map_data.markers = []
 		map_data.heatmapdata =  [];
-	console.log('loading map')
-  loadRawData().done(function(result) {
-    
-	var options = {
-		imagePath:'static/images/m'
-	}
-	$.each(result.cabs, function(){
-		processMarkers($(this)[0])
-	});
-	
-	if (!heatmap){
-		pointArray = new google.maps.MVCArray(map_data.heatmapdata);
-		heatmap = new google.maps.visualization.HeatmapLayer({
-			data: pointArray,
-			radius: 20
-		});
-	}else{
-		for (i = 0; i< pointArray.getLength(); i++){
-			pointArray.pop();
-		}
-		for(i = 0; i < map_data.heatmapdata.length; i++){
-			pointArray.push(map_data.heatmapdata[i]);
-		}
-	}
-	showMarkers();
+		loadRawData().done(function(result) {
+			
+			//process markers
+			$.each(result.cabs, function(){
+				processMarkers($(this)[0])
+			});
+		
+			// if heatmap doesn't exist yet then create it.  this will be loaded once
+			if (!heatmap){
+				pointArray = new google.maps.MVCArray(map_data.heatmapdata);
+				heatmap = new google.maps.visualization.HeatmapLayer({
+					data: pointArray,
+					radius: 15
+				});
+			}else{
+				pointArray.clear();
+				for(i = 0; i < map_data.heatmapdata.length; i++){
+					pointArray.push(map_data.heatmapdata[i]);
+				}
+			}
+			
+			showMarkers();
+			map_data.avgtip = (result.avgtip);
+			console.log(map_data.avgtip)
+			$('#tipsummary').html(map_data.avgtip)
+			$('.tripcount').html((result.cabs.length))
   });
 
 }
@@ -377,7 +366,6 @@ $(function() {
     return function () {
       Store.set(storageKey, this.checked);
 	  if (type != "heatmap"){
-		  console.log('test');
 		 updateMap();
 	  }
 	}

@@ -4,17 +4,20 @@
 from flask import Flask, jsonify, render_template, request
 from flask.json import JSONEncoder
 from flask_compress import Compress
+from datetime import datetime, timedelta
 
 from . import config
+import log
 from .models import CabTrip
 
 
 compress = Compress()
+logfile = log.Log("cabtrip.log")
 
 # the magic that happens that allows us to run the web application locally
-class CabDataSample(Flask):
+class CabData(Flask):
     def __init__(self, import_name, **kwargs):
-        super(CabDataSample, self).__init__(import_name, **kwargs)
+        super(CabData, self).__init__(import_name, **kwargs)
         compress.init_app(self)
         self.json_encoder = JSONEncoder
         self.route("/", methods=['GET'])(self.fullmap)
@@ -39,9 +42,16 @@ class CabDataSample(Flask):
         neighborhood = request.args.get('neighborhood')
         ispickup = request.args.get("ispickup")
 
-        d['cabs'] = CabTrip.get_records(neighborhood, date, time, ispickup.lower() == "true")
+        starttime = datetime.strptime("{0} {1}".format(date, time), "%m/%d/%Y %I:%M %p")
+        endtime = starttime + timedelta(minutes=config['MINUTE_BLOCK'])
+        
+        d['cabs'] = CabTrip.get_records(neighborhood, starttime, endtime, ispickup.lower() == "true")
+        tipamount = CabTrip.get_average_tip(neighborhood, starttime, endtime)
+        d['avgtip'] = '{:20,.2f}'.format(tipamount)
         d['neighborhoods'] = CabTrip.get_neighborhood()
 
+        logfile.record(("retrieved {0} cab trip data, {1} avg tip").format(len(d['cabs']), d['avgtip']))
+        
         if (bool(ispickup)):
             d['marker_type'] = "pickup"
         else:
