@@ -52,6 +52,7 @@ class CabData(Flask):
         avttimeminutes =  CabTrip.get_average_time('Midtown', 'Upper West Side', starttime, endtime)
         tippercentage = CabTrip.get_tip_percentage(neighborhood, neighborhoodtype, starttime, endtime, ispickup)
         d['avgtip'] = '{:20,.2f}'.format(tipamount)
+        d['avgcost'] = '{:20,.2f}'.format(costamount)
         d['percentagetip'] = '{0:.0f}%'.format(tippercentage * 100)
         d['percentcongestion'] = '{0:.0f}%'.format((1-congestion) * 100)
         d['avgtimeminutes'] = '{0:.0f} minutes'.format(avttimeminutes)

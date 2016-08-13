@@ -19,6 +19,7 @@ var map_data = {
 	percentcongestion: '0%',
 	percentagetip:'0%',
 	avgtimeminutes: '0.00',
+	avgcost:'0.00'
 };
 
 
@@ -313,12 +314,13 @@ function updateMap() {
 			map_data.percentcongestion = (result.percentcongestion);
 			map_data.avgtimeminutes = (result.avgtimeminutes);
 			map_data.percentagetip = (result.percentagetip);
-			
+			map_data.avgcost = (result.avgcost)
 			//update summaries
 			$('#tipsummary').html(map_data.avgtip);
 			$('#percentagetipsummary').html(map_data.percentagetip);
 			$('#congestionsummary').html(map_data.percentcongestion);
 			$('#triptimesummary').html(map_data.avgtimeminutes);
+			$('#tripcostsummary').html(map_data.avgcost);
 			$('.tripcount').html((result.cabs.length));
 			
 			

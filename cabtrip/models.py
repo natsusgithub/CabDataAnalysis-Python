@@ -141,8 +141,8 @@ class CabTrip(BaseModel):
 
         #build the sql statement.  although we are doing string format, we are controlling the type of data that can be put there
         #to avoid sql injection.  the expressions does use parameterized sql
-        sql = "select avg(trip_length_minutes) FROM cabtrip WHERE pickup_neighborhood == 'Midtown' " \
-              "and dropoff_neighborhood == 'Upper West Side' and pickup_time <= ? and pickup_time >= ?"
+        sql = "select avg(trip_length_minutes) FROM cabtrip WHERE pickup_neighborhood == ? " \
+              "and dropoff_neighborhood == ? and pickup_time <= ? and pickup_time >= ?"
         average_time = CabTrip.raw(sql, endtime, starttime).scalar()
 
         if (average_time == None):
@@ -161,6 +161,21 @@ class CabTrip(BaseModel):
         if (congestion == None):
             return 0
         return congestion
+
+    @classmethod
+    def get_average_cost(self, startneighborhood, endneighborhood, starttime, endtime):
+        query = None
+
+        #build the sql statement.  although we are doing string format, we are controlling the type of data that can be put there
+        #to avoid sql injection.  the expressions does use parameterized sql
+        sql = "select avg(fare_amount + tip_amount) FROM cabtrip WHERE pickup_neighborhood == ? " \
+              "and dropoff_neighborhood == ? and pickup_time <= ? and pickup_time >= ?"
+        avgcost = CabTrip.raw(sql, startneighborhood, endneighborhood, endtime, starttime).scalar()
+
+        if (avgcost == None):
+            return 0
+        
+        return avgcost
 
     @classmethod
     def get_average_tip(self, neighborhood, neighborhoodtype, starttime, endtime, ispickup):
