@@ -85,6 +85,7 @@ class CabTrip(BaseModel):
 
         return cabs
 
+    @classmethod
     def build_where_statement(self, neighborhoodtype, ispickup):
         datatype = "dropoff"
         neighborhooddatatype = "dropoff"
@@ -142,7 +143,7 @@ class CabTrip(BaseModel):
         #to avoid sql injection.  the expressions does use parameterized sql
         sql = "select avg(trip_length_minutes) FROM cabtrip WHERE pickup_neighborhood == 'Midtown' " \
               "and dropoff_neighborhood == 'Upper West Side' and pickup_time <= ? and pickup_time >= ?"
-        average_time = CabTrip.raw(sql, endtime, starttime, '%{0}%'.format(neighborhood)).scalar()
+        average_time = CabTrip.raw(sql, endtime, starttime).scalar()
 
         if (average_time == None):
             return 0
@@ -161,17 +162,6 @@ class CabTrip(BaseModel):
             return 0
         return congestion
 
-    # hardcode neighborlist
-    @classmethod
-    def get_neighborhood(self):
-        return [{'neighbor':"Financial District"},
-                {'neighbor':"Lower Manhattan"},
-                {'neighbor':"Midtown"},
-                {'neighbor':"Upper West Side"},
-                {'neighbor':"Upper East Side"},
-                {'neighbor':"Harlem"},
-                {'neighbor':"Upper Manhattan"}]
-
     @classmethod
     def get_average_tip(self, neighborhood, neighborhoodtype, starttime, endtime, ispickup):
         query = None
@@ -185,7 +175,31 @@ class CabTrip(BaseModel):
             return 0
         
         return tipamount
-    
+
+    @classmethod
+    def get_tip_percentage(self, neighborhood, neighborhoodtype, starttime, endtime, ispickup):
+        query = None
+
+        #build the sql statement.  although we are doing string format, we are controlling the type of data that can be put there
+        #to avoid sql injection.  the expressions does use parameterized sql
+        sql = "select avg(tip_amount / fare_amount) FROM cabtrip {0} and payment_type == 1".format(self.build_where_statement(neighborhoodtype, ispickup))
+        tippercentage = CabTrip.raw(sql, endtime, starttime, '%{0}%'.format(neighborhood)).scalar()
+
+        if (tippercentage == None):
+            return 0
+        
+        return tippercentage
+
+    # hardcode neighborlist
+    @classmethod
+    def get_neighborhood(self):
+        return [{'neighbor':"Financial District"},
+                {'neighbor':"Lower Manhattan"},
+                {'neighbor':"Midtown"},
+                {'neighbor':"Upper West Side"},
+                {'neighbor':"Upper East Side"},
+                {'neighbor':"Harlem"},
+                {'neighbor':"Upper Manhattan"}] 
 # helper to display a progress bar
 def __progressbar(i):
 

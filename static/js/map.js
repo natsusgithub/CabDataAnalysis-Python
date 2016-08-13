@@ -16,7 +16,9 @@ var map_data = {
 	heatmapdata: [],
 	cabs: [],
 	avgtip: '0.00',
-	percentcongestion: '0%'
+	percentcongestion: '0%',
+	percentagetip:'0%',
+	avgtimeminutes: '0.00',
 };
 
 
@@ -309,11 +311,15 @@ function updateMap() {
 			showMarkers();
 			map_data.avgtip = (result.avgtip);
 			map_data.percentcongestion = (result.percentcongestion);
+			map_data.avgtimeminutes = (result.avgtimeminutes);
+			map_data.percentagetip = (result.percentagetip);
 			
 			//update summaries
-			$('#tipsummary').html(map_data.avgtip)
-			$('#congestionsummary').html(map_data.percentcongestion)
-			$('.tripcount').html((result.cabs.length))
+			$('#tipsummary').html(map_data.avgtip);
+			$('#percentagetipsummary').html(map_data.percentagetip);
+			$('#congestionsummary').html(map_data.percentcongestion);
+			$('#triptimesummary').html(map_data.avgtimeminutes);
+			$('.tripcount').html((result.cabs.length));
 			
 			
   });

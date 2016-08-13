@@ -103,18 +103,33 @@
         <div id="widget-tip-estimator" class="widget" style="background-image:url(/static/images/tip-estimator.png)">
 			<div class="summary-info">
 			<div>
-			records: <span class="tripcount"></span>
+			average tip: $<span id="tipsummary"></span>
 			</div>
 			<div>
-			average tip: $<span id="tipsummary"></span>
+			percentage tip: <span id="percentagetipsummary"></span>
 			</div>
 			
 		   </div>
             <a href="#" class="more-info2" data-widget="tip-estimator">More info</a>
         </div>
          
-        <div id="widget-recommendation" class="widget" style="background-image:url(/static/images/recommendation.png)">
-            <a href="#" class="more-info" data-widget="recommendation">More info</a>
+        <div id="widget-recommendation" class="widget" style="background-image:url(/static/images/recommendation.png); height:300px">
+            <div class="summary-info">
+			
+			<div>
+			from: Empire State Building
+			</div>
+			<div>
+			to: American Museum of Natural History
+			</div>
+			<div>
+			est trip time <br />
+			cab: <span id="triptimesummary"></span>
+			subway + walk: 20 minutes (5 min subway, 15 min walk)
+			</div>
+			
+		   </div>
+			<a href="#" class="more-info2" data-widget="recommendation">More info</a>
         </div>
           
       </nav>

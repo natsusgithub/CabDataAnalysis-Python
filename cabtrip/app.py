@@ -49,8 +49,12 @@ class CabData(Flask):
         d['cabs'] = CabTrip.get_records(neighborhood, neighborhoodtype, starttime, endtime, ispickup.lower() == "true")
         tipamount = CabTrip.get_average_tip(neighborhood, neighborhoodtype, starttime, endtime, ispickup)
         congestion = CabTrip.get_average_congestion(neighborhood, neighborhoodtype, starttime, endtime, ispickup)
+        avttimeminutes =  CabTrip.get_average_time('Midtown', 'Upper West Side', starttime, endtime)
+        tippercentage = CabTrip.get_tip_percentage(neighborhood, neighborhoodtype, starttime, endtime, ispickup)
         d['avgtip'] = '{:20,.2f}'.format(tipamount)
+        d['percentagetip'] = '{0:.0f}%'.format(tippercentage * 100)
         d['percentcongestion'] = '{0:.0f}%'.format((1-congestion) * 100)
+        d['avgtimeminutes'] = '{0:.0f} minutes'.format(avttimeminutes)
         print(d['percentcongestion'])
         logfile.record(("retrieved {0} cab trip data, {1} avg tip").format(len(d['cabs']), d['avgtip']))
         
