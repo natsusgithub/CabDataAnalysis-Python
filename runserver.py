@@ -18,7 +18,7 @@ from cabtrip.models import init_database, create_tables, drop_tables, CabTrip, l
 
 if __name__ == '__main__':
 
-    reload = False
+    reload = True
     db = init_database()
 
     if (CabTrip.select().count() == 0 or reload):

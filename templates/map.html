@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="static/css/app.min.css">
     <link rel="stylesheet" href="static/css/plot.css">
     <link rel="stylesheet" href="//code.jquery.com/ui/1.12.0/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.css">
     <script src="static/js/vendor/modernizr.custom.js"></script>
   </head>
   <body id="top">
@@ -37,8 +38,8 @@
 			<option value="Upper Manhattan">Upper Manhattan</option>
 		  </select>
 		  </div>
-          <input type="radio" class="neighborhood-type" name="neighborhood-type" value="Pick-up" checked>Pick-up
-          <input type="radio" class="neighborhood-type" name="neighborhood-type" value="Drop-off">Drop-off    
+          <input type="radio" class="neighborhood-type" name="neighborhood-type" value="Pick-up" checked>Origin
+          <input type="radio" class="neighborhood-type" name="neighborhood-type" value="Drop-off">Destination 
         </div>
 		
         <strong>Date</strong>
@@ -58,7 +59,7 @@
 		  <img src="static/images/red-dot.png" width="20px" />
 		  Drop-off</span>
 		  
-          <div class="onoffswitch" style="float: left; left: 70px;">
+          <div class="onoffswitch" style="float: left; left: 50px;">
             <input id="pickup-switch" type="checkbox" name="pickup-switch" class="onoffswitch-checkbox" checked>
             <label class="onoffswitch-label" for="pickup-switch">
             <span class="switch-label" data-on="On" data-off="Off"></span>
@@ -118,7 +119,7 @@
                 <img src="/static/images/cab.png" width="10%"/>
                 time: <span id="triptimesummary"></span> &nbsp; cost: $ <span id="tripcostsummary"></span>
 			</div>
-			<div style="font-size:10pt">
+			<div>
 			    <img src="/static/images/train-2.png" width="10%"/>
                 time: 20min (15min walk) &nbsp; cost: $ 3.00
 			</div>
@@ -167,6 +168,7 @@
     <script defer src="https://maps.googleapis.com/maps/api/js?key={{gmaps_key}}&amp;callback=initMap&amp;libraries=places,geometry,visualization"></script>
     <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
     <script src="https://code.jquery.com/ui/1.12.0/jquery-ui.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js"></script>
   
     
         
@@ -201,12 +203,7 @@
         $(".close").click(function(){
           $(this).parent().parent().hide();  
         })
-        $( "#datepicker" ).datepicker({
-          showOn: "button",
-          buttonImage: "static/images/calendar.png",
-          buttonImageOnly: true,
-          buttonText: "Select date"
-        });
+        $( "#datepicker" ).datepicker();
         
         function displayTime(value) {
             var hours = Math.floor(value / 60);
@@ -240,7 +237,7 @@
         });
 		$('#timevalue').val(displayTime(0))
         $( "#time" ).val(displayTime(0) + " - " + displayTime(15));
-   
+        $("#neighborhood").select2();
    });
     </script>
       
