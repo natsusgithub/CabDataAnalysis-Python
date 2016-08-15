@@ -1,0 +1,35 @@
+retrieved 0 cab trip data, 2.8567921686746947 avg tip, 0.21247619475735396 tip percentage, 0.7559298511228867 avg congestion, 9.142857142857142 avg time minutes, 10.426904761904765 avg cost
+retrieved 1385 cab trip data, 2.8567921686746947 avg tip, 0.21247619475735396 tip percentage, 0.7559298511228867 avg congestion, 9.142857142857142 avg time minutes, 10.426904761904765 avg cost
+retrieved 5636 cab trip data, 2.443779485820296 avg tip, 0.2035574896115766 tip percentage, 0.3735563703024748 avg congestion, 13.649572649572649 avg time minutes, 11.379786324786325 avg cost
+retrieved 5069 cab trip data, 2.61152906208718 avg tip, 0.20561392962775007 tip percentage, 0.3537460978147763 avg congestion, 15.505747126436782 avg time minutes, 12.481187739463598 avg cost
+retrieved 5574 cab trip data, 2.777926040858539 avg tip, 0.2236238953306998 tip percentage, 0.41752749083638785 avg congestion, 12.711392405063291 avg time minutes, 11.329012658227839 avg cost
+retrieved 1181 cab trip data, 2.27294825511432 avg tip, 0.22060987301829513 tip percentage, 0.43398668639053256 avg congestion, 12.711392405063291 avg time minutes, 11.329012658227839 avg cost
+retrieved 1140 cab trip data, 2.1692328398384912 avg tip, 0.20045970672775018 tip percentage, 0.3501350135013501 avg congestion, 14.330708661417322 avg time minutes, 11.72755905511811 avg cost
+retrieved 1047 cab trip data, 2.311756548536207 avg tip, 0.2068889595629599 tip percentage, 0.352859778597786 avg congestion, 14.902877697841726 avg time minutes, 11.847338129496402 avg cost
+retrieved 1177 cab trip data, 2.2813680781758956 avg tip, 0.2103381267426816 tip percentage, 0.31810269799825935 avg congestion, 14.009677419354839 avg time minutes, 11.199225806451613 avg cost
+retrieved 5065 cab trip data, 2.6704063860667615 avg tip, 0.2146520028328512 tip percentage, 0.3146462556888705 avg congestion, 14.009677419354839 avg time minutes, 11.199225806451613 avg cost
+retrieved 4599 cab trip data, 2.6861756473058027 avg tip, 0.20629034671020618 tip percentage, 0.3215873015873016 avg congestion, 14.514367816091953 avg time minutes, 11.831034482758623 avg cost
+retrieved 743 cab trip data, 4.520673854447439 avg tip, 0.21845493500237745 tip percentage, 0.8922475106685633 avg congestion, 6.066666666666666 avg time minutes, 8.287333333333333 avg cost
+retrieved 5285 cab trip data, 2.376668261181534 avg tip, 0.2017360955860051 tip percentage, 0.41105236227187447 avg congestion, 11.770114942528735 avg time minutes, 10.698390804597707 avg cost
+retrieved 1385 cab trip data, 2.8567921686746947 avg tip, 0.21247619475735396 tip percentage, 0.7559298511228867 avg congestion, 9.142857142857142 avg time minutes, 10.426904761904765 avg cost
+retrieved 1385 cab trip data, 2.8567921686746947 avg tip, 0.21247619475735396 tip percentage, 0.7559298511228867 avg congestion, 9.142857142857142 avg time minutes, 10.426904761904765 avg cost
+retrieved 1385 cab trip data, 2.8567921686746947 avg tip, 0.21247619475735396 tip percentage, 0.7559298511228867 avg congestion, 9.142857142857142 avg time minutes, 10.426904761904765 avg cost
+Database tables dropped!
+Database tables created!
+Loading cab data (about 380,000 records total in default file)...
+load completed! 381695 record(s)
+Generating calculations to database...
+Apply calculations...
+Update records that fall within quantile 0.2...
+Update records that fall within quantile 0.4...
+Update records that fall within quantile 0.6...
+Update records that fall within quantile 0.8...
+Update records that fall above quantile 0.8...
+retrieved 1385 cab trip data, 2.8567921686746947 avg tip, 0.21247619475735396 tip percentage, 0.7559298511228867 avg congestion, 9.142857142857142 avg time minutes, 10.426904761904765 avg cost
+retrieved 4864 cab trip data, 2.367592540265609 avg tip, 0.2063248418043273 tip percentage, 0.5547 avg congestion, 9.488789237668161 avg time minutes, 9.239865470852019 avg cost
+retrieved 4612 cab trip data, 2.6852369587453095 avg tip, 0.20818272102738972 tip percentage, 0.34389964605454926 avg congestion, 13.9421768707483 avg time minutes, 11.494761904761903 avg cost
+retrieved 3780 cab trip data, 2.279913174782935 avg tip, 0.20068076412185187 tip percentage, 0.7415997993981945 avg congestion, 6.908536585365853 avg time minutes, 7.964634146341461 avg cost
+retrieved 4315 cab trip data, 2.9337106265143587 avg tip, 0.22177431571448147 tip percentage, 0.3796901349072513 avg congestion, 12.24113475177305 avg time minutes, 10.922163120567381 avg cost
+retrieved 5551 cab trip data, 2.542310987903222 avg tip, 0.21606162610151358 tip percentage, 0.665603448275862 avg congestion, 9.640243902439025 avg time minutes, 10.29987804878049 avg cost
+retrieved 4665 cab trip data, 2.5033040131940587 avg tip, 0.2043453590800242 tip percentage, 0.505717054263566 avg congestion, 10.336585365853658 avg time minutes, 9.885268292682925 avg cost
+retrieved 4663 cab trip data, 2.8133357558139505 avg tip, 0.21084227426356617 tip percentage, 0.3386501736111111 avg congestion, 14.168789808917197 avg time minutes, 11.849426751592357 avg cost

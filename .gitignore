@@ -6,3 +6,5 @@
 config/config.ini
 !zipcode.csv
 
+
+*.DS_Store

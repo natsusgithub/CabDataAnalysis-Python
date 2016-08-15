@@ -4,14 +4,22 @@
 //
 
 var map;
+var heatmap;
 var rawDataIsLoading = false;
 var locationMarker;
 var marker;
-
-var selectedStyle = 'light';
+var pointArray; 
 
 var map_data = {
-	cabs: {}
+	markers: [],
+	neighborhoods: [],
+	heatmapdata: [],
+	cabs: [],
+	avgtip: '0.00',
+	percentcongestion: '0%',
+	percentagetip:'0%',
+	avgtimeminutes: '0.00',
+	avgcost:'0.00'
 };
 
 
@@ -66,6 +74,19 @@ var StoreOptions = {
     default: 'roadmap',
     type: StoreTypes.String
   },
+  showDropoffs: {
+	  default: true,
+	  type: StoreTypes.Boolean
+  },
+  showPickups: {
+	  default: true,
+	  type: StoreTypes.Boolean
+  },
+  showCongestion: {
+	  default: false,
+	  type: StoreTypes.Boolean
+  }
+  
 };
 
 var Store = {
@@ -109,26 +130,25 @@ function initMap() {
     },
     zoom: 13,
     fullscreenControl: true,
-    streetViewControl: false,
+	scrollwheel: false,
+	zoomControl:false,
+	disableDoubleClickZoom: true,
+	navigationControl: false,
+	scaleControl: false,
+	streetViewControl: false,
     mapTypeControl: true,
     mapTypeControlOptions: {
       style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
       position: google.maps.ControlPosition.RIGHT_TOP,
     },
-
   });
-
-  //var marker = createSearchMarker();
-  // hardcoded to central park ny/ny
-  //var newmarker = setupMarker({latitude:40.757485 , longitude:-73.978466});
-  initSidebar();
+	
   google.maps.event.addListenerOnce(map, 'idle', function() {
     updateMap();
   });
-
-  google.maps.event.addListener(map, 'zoom_changed', function() {
-    // redraw the markers
-  });
+	Store.set("showCongestion", false);
+	Store.set("showPickups", false);
+  
 }
 
 function createSearchMarker() {
@@ -163,22 +183,6 @@ function createSearchMarker() {
   return marker;
 }
 
-function initSidebar() {
-  
-  var searchBox = new google.maps.places.SearchBox(document.getElementById('next-location'));
-  $("#next-location").css("background-color", $('#geoloc-switch').prop('checked') ? "#e0e0e0" : "#ffffff");
-
-  searchBox.addListener('places_changed', function() {
-    var places = searchBox.getPlaces();
-
-    if (places.length == 0) {
-      return;
-    }
-
-    var loc = places[0].geometry.location;
-    changeLocation(loc.lat(), loc.lng());
-  });
-}
 
 function clearSelection() {
   if (document.selection) {
@@ -198,16 +202,20 @@ function clearMarkers() {
 }
 
 function loadRawData() {
-
+ console.log($('#time').val())
   return $.ajax({
     url: "raw_data",
     type: 'GET',
     data: {
-      
+      'neighborhood': $('#neighborhood').val(),
+	  'neighborhoodtype': $('input[name=neighborhood-type]:checked').val(),
+	  'date': $('#datepicker').val(),
+	  'time': $('#timevalue').val(),
+	  'ispickup': Store.get('showPickups')
     },
     dataType: "json",
     beforeSend: function() {
-      if (rawDataIsLoading) {
+	  if (rawDataIsLoading) {
         return false;
       } else {
         rawDataIsLoading = true;
@@ -219,45 +227,117 @@ function loadRawData() {
   })
 }
 
-function processClusterMarkers(item) {
-	  
-	  map_data.cabs[item.id] = item
-	  var latLng = new google.maps.LatLng(item.latitude, item.longitude);
-	  var marker = new google.maps.Marker({
-	position: latLng,
-    //icon: 'static/images/pickup.png'
-		});
-	  
-	  return marker;
-    }
 
 function processMarkers(item) {
 	  
-	  map_data.cabs[item.id] = item
+	  var myicon
+	  if (Store.get('showPickups') == true){
+		  myicon = 'static/images/pickup_norence.png';
+	  }else{
+		  myicon = 'static/images/dropoff_norence.png';
+	  }
 	  var latLng = new google.maps.LatLng(item.latitude, item.longitude);
 	  var marker = new google.maps.Marker({
-	position: latLng,
-    icon: 'static/images/pickup.png',
-	map: map
+		position: latLng,
+		icon: myicon,
+		map: null
 		});
-	  
-	  return marker;
-    }
+		map_data.markers.push(marker);
+	 // var heatmapmarker = {location: latLng, weight: item.congestion_index}	
+		
+		map_data.heatmapdata.push(latLng);
 	
-function updateMap() {
-  loadRawData().done(function(result) {
+}
+
+
+ // Removes the markers from the map, but keeps them in the array.
+      function clearMarkers() {
+        setMapOnAll(null);
+      }
+
+      // Shows any markers currently in the array.
+      function showMarkers() {
+        setMapOnAll(map);
+      }
+
+      // Deletes all markers in the array by removing references to them.
+      function deleteMarkers() {
+		  console.log('deleting...')
+        clearMarkers();
+        markers = [];
+      }
+// Sets the map on all markers in the array.
+      function setMapOnAll(map) {
+		  if (Store.get("showCongestion") == true){
+			  
+				heatmap.setMap(map)
+				clearMarkers();
+		  }else{
+			for (var i = 0; i < map_data.markers.length; i++) {
+				map_data.markers[i].setMap(map);
+			}
+			heatmap.setMap(null);
+		  }
+      }
+
+function loadGraphs(){
+	$.ajax({
+		url: "load_graphs",
+		type: 'POST',
+		success:function(result){
+			//this should load graphs???
+		}
     
-	var options = {
-		imagePath:'static/images/m'
-	}
-	
-	var markers = [];
-	$.each(result.cabs, function(){
-		markers.push(processMarkers($(this)[0]))
-	});
-	
-	//var markerCluster = new MarkerClusterer(map, markers, options)
+    
   });
+}
+	  
+function updateMap() {
+
+	
+	  for (var i = 0; i < map_data.markers.length; i++ ){
+			  map_data.markers[i].setMap(null);
+		  }
+		map_data.markers = []
+		map_data.heatmapdata =  [];
+		loadRawData().done(function(result) {
+			
+			//process markers
+			$.each(result.cabs, function(){
+				processMarkers($(this)[0])
+			});
+		
+			// if heatmap doesn't exist yet then create it.  this will be loaded once
+			if (!heatmap){
+				pointArray = new google.maps.MVCArray(map_data.heatmapdata);
+				heatmap = new google.maps.visualization.HeatmapLayer({
+					data: pointArray,
+					radius: 10,
+				});
+			}else{
+				pointArray.clear();
+				for(i = 0; i < map_data.heatmapdata.length; i++){
+					pointArray.push(map_data.heatmapdata[i]);
+				}
+			}
+			
+			showMarkers();
+			map_data.avgtip = (result.avgtip);
+			map_data.percentcongestion = (result.percentcongestion);
+			map_data.avgtimeminutes = (result.avgtimeminutes);
+			map_data.percentagetip = (result.percentagetip);
+			map_data.avgcost = (result.avgcost)
+			//update summaries
+			$('#tipsummary').html(map_data.avgtip);
+			$('#percentagetipsummary').html(map_data.percentagetip);
+			$('#congestionsummary').html(map_data.percentcongestion);
+			$('#triptimesummary').html(map_data.avgtimeminutes);
+			$('#tripcostsummary').html(map_data.avgcost);
+			$('.tripcount').html((result.cabs.length));
+			
+			
+  });
+
 }
 
 
@@ -271,32 +351,18 @@ function centerMap(lat, lng, zoom) {
   }
 }
 
+function clearMarkers(deleteMarker){
+	for (var i = 0; i < map_data.markers.length; i++ ){
+			  map_data.markers[i].setMap(null);
+			  if (deleteMarker == true){
+				  map_data.markers[i] = null
+			  }
+		  }
+}
+
 $(function() {
   // run interval timers to regularly update map
   //window.setInterval(updateMap, 5000);
-  updateMap // TODO: only call it once for demo purposes
-  
-  
-  
-  //Wipe off/restore map icons when switches are toggled
-  function buildSwitchChangeListener(data, data_type, storageKey) {
-    return function () {
-      Store.set(storageKey, this.checked);
-      if (this.checked) {
-        updateMap();
-      } else {
-        $.each(data_type, function(d, d_type) {
-          $.each(data[d_type], function (key, value) {
-            data[d_type][key].marker.setMap(null);
-          });
-          data[d_type] = {}
-        });
-      }
-    };
-  }
+  //updateMap() // TODO: only call it once for demo purposes
 
-  // Setup UI element interactions
-  $('#dropoff-switch').change(buildSwitchChangeListener(map_data, ["dropoff"], "showDropoffs"));
-  $('#pickup-switch').change(buildSwitchChangeListener(map_data, ["pickup"], "showPickups"));
-  
 });

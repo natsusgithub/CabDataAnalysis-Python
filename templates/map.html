@@ -7,6 +7,9 @@
     <meta name="theme-color" content="#3b3b3b">
     <link rel='shortcut icon' href='static/images/favicon.ico' type='image/x-icon'/>
     <link rel="stylesheet" href="static/css/app.min.css">
+    <link rel="stylesheet" href="static/css/plot.css">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.0/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.css">
     <script src="static/js/vendor/modernizr.custom.js"></script>
   </head>
   <body id="top">
@@ -15,48 +18,142 @@
       <header id="header">
         <!--<a href="#nav">Options</a>-->
         <a href="#"> <span id="logo" style="background-image:url(static/images/logo.png);"></span></a>
-        <input id="location" type="text" name="next-location" placeholder="Type your location">
       </header>
+
       <!-- NAV -->
       <nav id="nav">
         <div class="form-control switch-container" style="display:{{is_fixed}}" >
-          <label for="next-location">
-            <h3>Sample Item</h3>
+          <label for="neighborhood">
+          <strong>Neighborhood</strong>
           </label>
-          <input id="next-location" type="text" name="next-location" placeholder="Change this Item">
+		  <div>
+		  <select id="neighborhood" name="neighborhood">
+			<option value="">- All - </option>
+			<option value="Financial District">Financial District</option>
+			<option value="Lower Manhattan">Lower Manhattan</option>
+			<option value="Midtown">Midtown</option>
+			<option value="Upper West Side">Upper West Side</option>
+			<option value="Upper East Side">Upper East Side</option>
+			<option value="Harlem">Harlem</option>
+			<option value="Upper Manhattan">Upper Manhattan</option>
+		  </select>
+		  </div>
+          <input type="radio" class="neighborhood-type" name="neighborhood-type" value="Pick-up" checked>Origin
+          <input type="radio" class="neighborhood-type" name="neighborhood-type" value="Drop-off">Destination
         </div>
-		<hr width="100%">
 
-        <p>Select markers to be visible on map.</p>
+        <strong>Date</strong>
+        <input type="text" id="datepicker" value="7/1/2015">
+
+        <strong>Time</strong>
+        <input type="text" id="time" readonly style="border:0; color:#f6931f; font-weight:bold;">
+		<input type="hidden" id="timevalue" />
+        <div id="slider-time-range"></div>
+
+        <strong>Show/hide markers on map</strong>
         <div class="form-control switch-container">
-          <h3>Show Pickup</h3>
-          <div class="onoffswitch">
+          <span style="float: left;">
+		  <img src="static/images/blue-dot.png" width="20px" />
+		  Pick-up</span>
+          <span style="float: right;">
+		  <img src="static/images/red-dot.png" width="20px" />
+		  Drop-off</span>
+
+          <div class="onoffswitch" style="float: left; left: 50px;">
             <input id="pickup-switch" type="checkbox" name="pickup-switch" class="onoffswitch-checkbox" checked>
             <label class="onoffswitch-label" for="pickup-switch">
             <span class="switch-label" data-on="On" data-off="Off"></span>
             <span class="switch-handle"></span>
             </label>
           </div>
+
         </div>
-		 <div class="form-control switch-container">
-          <h3>Show Dropoff</h3>
+        <div class="form-control switch-container">
+          Congestion
           <div class="onoffswitch">
-            <input id="dropoff-switch" type="checkbox" name="dropoff-switch" class="onoffswitch-checkbox" checked>
-            <label class="onoffswitch-label" for="dropoff-switch">
+            <input id="congestion-switch" type="checkbox" name="congestion-switch" class="onoffswitch-checkbox">
+            <label class="onoffswitch-label" for="congestion-switch">
             <span class="switch-label" data-on="On" data-off="Off"></span>
             <span class="switch-handle"></span>
             </label>
-          </div>
+           </div>
+         <br />
+           <small style="float: left;">Low</small>
+           <small style="float: right;">High</small>
+           <img src="/static/images/congestion_spectrum.png" width="100%"/>
         </div>
+
+        <!-- clear -->
+        <div style="clear: both;"></div>
+
+        <!-- widgets -->
+
+        <div id="widget-congestion" class="widget" style="background-image:url(/static/images/congestion.png)">
+		<div class="summary-info">
+			<div>
+			records: <span class="tripcount"></span>
+			</div>
+			<div>
+			percent congested: <span id="congestionsummary"></span>
+			</div>
+
+		   </div>
+        </div>
+
+        <div id="widget-tip-estimator" class="widget" style="background-image:url(/static/images/tip-estimator.png)">
+			<div class="summary-info">
+			<div>
+			average tip: $<span id="tipsummary"></span>
+			</div>
+			<div>
+			percentage tip: <span id="percentagetipsummary"></span>
+			</div>
+
+		   </div>
+        </div>
+        <div id="widget-recommendation" class="widget" style="background-image:url(/static/images/recommendation.png)">
+            <div class="summary-info">
+			<div>
+                <img src="/static/images/cab.png" width="10%"/>
+                time: <span id="triptimesummary"></span> &nbsp; cost: $ <span id="tripcostsummary"></span>
+			</div>
+			<div>
+			    <img src="/static/images/train-2.png" width="10%"/>
+                time: 11min (4min walk) &nbsp; cost: $ 2.75 *
+			</div>
+        </div>
+
       </nav>
+
       <div id="map"></div>
-    </div>
+
+      <!-- Overlays -->
+      <div id="congestion" class="overlay">
+           <h1>CONGESTION INDEX<span class="close">x</span></h1>
+           <hr>
+           <div class="plot"></div>
+      </div>
+
+      <div id="tip-estimator" class="overlay">
+           <h1>TRIP ESTIMATOR<span class="close">x</span></h1>
+           <hr>
+      </div>
+
+      <div id="recommendation" class="overlay">
+           <h1>RECOMMENDATION<span class="close">x</span></h1>
+           <hr>
+      </div>
+
+
     <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/6.9.1/polyfill.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/6.9.1/polyfill.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/skel/3.0.1/skel.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js"></script>
+    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
     <script src="static/js/app.js"></script>
+    <script src="static/js/plot.js"></script>
     <script src="static/js/vendor/classie.js"></script>
     <script>
       var center_lat = {{lat}};
@@ -64,6 +161,79 @@
     </script>
     <script src="static/js/map.js"></script>
 	<script src="static/js/markerclusterer.js"></script>
-    <script defer src="https://maps.googleapis.com/maps/api/js?key={{gmaps_key}}&amp;callback=initMap&amp;libraries=places,geometry"></script>
+    <script defer src="https://maps.googleapis.com/maps/api/js?key={{gmaps_key}}&amp;callback=initMap&amp;libraries=places,geometry,visualization"></script>
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.0/jquery-ui.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js"></script>
+
+
+
+    <script type="text/javascript">
+   $(document).ready(function(){
+         // Setup UI element interactions
+		  $('#pickup-switch').change(function(){
+			  Store.set("showPickups", !this.checked);
+			  updateMap();
+		  });
+		  $('#slider-time-range').on("slidestop",function(){
+			  updateMap();
+			  });
+		  $('#congestion-switch').change(function(){
+			  Store.set("showCongestion", this.checked);
+			  showMarkers();
+		  });
+		  $('#neighborhood').change(function(){
+			 updateMap();
+		  });
+		  $('.neighborhood-type').change(function(){
+			 updateMap();
+		  });
+
+        $(".more-info").click(function() {
+           widget = $(this).data("widget");
+           $("#"+widget).show();
+        });
+        $(".close").click(function(){
+          $(this).parent().parent().hide();
+        })
+        $( "#datepicker" ).datepicker();
+
+        function displayTime(value) {
+            var hours = Math.floor(value / 60);
+            var minutes = value - (hours * 60);
+
+            if(hours.toString().length == 1) hours = '0' + hours;
+            if(minutes.toString().length == 1) minutes = '0' + minutes;
+
+
+            //it is pm if hours from 12 onwards
+            suffix = (hours >= 12)? 'pm' : 'am';
+
+            //only -12 from hours if it is greater than 12 (if not back at mid night)
+            hours = (hours > 12)? hours -12 : hours;
+
+            //if 00 then it is 12 am
+            hours = (hours == '00')? 12 : hours;
+
+            return hours + ":" + minutes + " " + suffix;
+        }
+
+        $( "#slider-time-range" ).slider({
+          min: 0,
+          max: 1425,
+          value: 0,
+		  step: {{minute_block}},
+          slide: function( event, ui ) {
+			$('#timevalue').val(displayTime(ui.value));
+            $( "#time" ).val(displayTime(ui.value) + " - " + displayTime(ui.value + 15));
+          }
+        });
+		$('#timevalue').val(displayTime(0))
+        $( "#time" ).val(displayTime(0) + " - " + displayTime(15));
+        $("#neighborhood").select2();
+   });
+    </script>
+
+
   </body>
 </html>
